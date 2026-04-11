@@ -6,7 +6,7 @@ Questo corso offre una formazione completa sulle tecnologie cloud computing, dal
 
 ## **Modulo 1: Introduzione al Cloud Computing**
 
-### 1.1 Concetti Fondamentali
+### 1.1 [Concetti Fondamentali](01-Introduzione_al_Cloud_Computing/01-Concetti_Fondamentali.md)
 - Definizione di Cloud Computing
 - Storia ed evoluzione del Cloud
 - Introduzione ai Datacenter
@@ -14,14 +14,14 @@ Questo corso offre una formazione completa sulle tecnologie cloud computing, dal
 - Virtualizzazione e Container
 - Vantaggi e svantaggi del Cloud Computing
 
-### 1.2 Modelli di Servizio
+### 1.2 [Modelli di Servizio](01-Introduzione_al_Cloud_Computing/02-Modelli_di_Servizio.md)
 - **IaaS** (Infrastructure as a Service)
 - **PaaS** (Platform as a Service)
 - **SaaS** (Software as a Service)
 - **FaaS/Serverless** (Function as a Service)
 - Confronto tra i modelli
 
-### 1.3 Modelli di Deployment
+### 1.3 [Modelli di Deployment](01-Introduzione_al_Cloud_Computing/03-Modelli_di_Deployment.md)
 - Public Cloud
 - Private Cloud
 - Hybrid Cloud
@@ -32,7 +32,7 @@ Questo corso offre una formazione completa sulle tecnologie cloud computing, dal
 
 ## **Modulo 2: Virtualizzazione**
 
-### 2.1 Fondamenti di Virtualizzazione
+### 2.1 [Fondamenti di Virtualizzazione](02-Virtualizzazione/01-Fondamenti_di_Virtualizzazione.md)
 - Storia e evoluzione della virtualizzazione
 - Concetti di astrazione hardware
 - Benefici della virtualizzazione (consolidamento, isolamento, flessibilità)
@@ -40,7 +40,7 @@ Questo corso offre una formazione completa sulle tecnologie cloud computing, dal
 - Virtualizzazione hardware vs software
 - Paravirtualizzazione
 
-### 2.2 Hypervisor e Tecnologie
+### 2.2 [Hypervisor e Tecnologie](02-Virtualizzazione/02-Hypervisor_e_Tecnologie.md)
 - **Type 1 Hypervisor (Bare-metal)**
   - VMware ESXi
   - Microsoft Hyper-V
@@ -53,7 +53,7 @@ Questo corso offre una formazione completa sulle tecnologie cloud computing, dal
   - QEMU
 - Confronto tra Type 1 e Type 2
 
-### 2.3 Architettura delle Virtual Machine
+### 2.3 [Architettura delle Virtual Machine](02-Virtualizzazione/03-Architettura_delle_Virtual_Machine.md)
 - Struttura di una VM
 - Virtual CPU (vCPU)
 - Virtual Memory
@@ -62,7 +62,7 @@ Questo corso offre una formazione completa sulle tecnologie cloud computing, dal
 - Snapshot e cloning
 - Template di VM
 
-### 2.4 Gestione delle Risorse
+### 2.4 [Gestione delle Risorse](02-Virtualizzazione/04-Gestione_delle_Risorse.md)
 - CPU scheduling
 - Memory management (ballooning, swapping)
 - Storage management
@@ -70,14 +70,14 @@ Questo corso offre una formazione completa sulle tecnologie cloud computing, dal
 - Resource pooling e allocation
 - Quality of Service (QoS)
 
-### 2.5 Virtualizzazione della Rete
+### 2.5 [Virtualizzazione della Rete](02-Virtualizzazione/05-Virtualizzazione_della_Rete.md)
 - Virtual Switch
 - VLAN e network segmentation
 - Software-Defined Networking (SDN)
 - Network Function Virtualization (NFV)
 - Virtual Router e Virtual Firewall
 
-### 2.6 Virtualizzazione dello Storage
+### 2.6 [Virtualizzazione dello Storage](02-Virtualizzazione/06-Virtualizzazione_dello_Storage.md)
 - Storage Area Network (SAN)
 - Network Attached Storage (NAS)
 - Virtual SAN
@@ -85,14 +85,14 @@ Questo corso offre una formazione completa sulle tecnologie cloud computing, dal
 - Storage migration
 - Data deduplication
 
-### 2.7 Virtualizzazione nel Cloud
+### 2.7 [Virtualizzazione nel Cloud](02-Virtualizzazione/07-Virtualizzazione_nel_Cloud.md)
 - Come i cloud provider usano la virtualizzazione
 - Nested virtualization
 - Hardware-assisted virtualization (Intel VT-x, AMD-V)
 - Virtual Machine su AWS (EC2), Azure, GCP
 - Bare-metal instances
 
-### 2.8 Performance e Ottimizzazione
+### 2.8 [Performance e Ottimizzazione](02-Virtualizzazione/08-Performance_e_Ottimizzazione.md)
 - Overhead della virtualizzazione
 - Performance tuning
 - Right-sizing delle VM
@@ -100,7 +100,7 @@ Questo corso offre una formazione completa sulle tecnologie cloud computing, dal
 - SR-IOV (Single Root I/O Virtualization)
 - GPU virtualization
 
-### 2.9 Sicurezza nella Virtualizzazione
+### 2.9 [Sicurezza nella Virtualizzazione](02-Virtualizzazione/09-Sicurezza_nella_Virtualizzazione.md)
 - VM isolation
 - Hypervisor security
 - VM escape attacks
@@ -108,14 +108,14 @@ Questo corso offre una formazione completa sulle tecnologie cloud computing, dal
 - Secure boot
 - Encrypted VM
 
-### 2.10 Container vs Virtual Machine
+### 2.10 [Container vs Virtual Machine](02-Virtualizzazione/10-Container_vs_Virtual_Machine.md)
 - Architettura a confronto
 - Vantaggi e svantaggi
 - Use cases appropriati
 - Overhead e performance
 - Portabilità
 
-### 2.11 Esercitazione 1 con VirtualBox
+### 2.11 [Esercitazione 1 con VirtualBox](02-Virtualizzazione/11-Esercitazione_1_con_VirtualBox.md)
 - Abilitazione Virtualizzazione nel BIOS
 - Creare una Macchina Virtuale
 - Installare Windows su VM

@@ -20,10 +20,10 @@ I **modelli di deployment** definiscono **dove** l'infrastruttura cloud è local
 ```
 ┌────────────────────────────────────────────────┐
 │                                                │
-│  Public Cloud     → AWS, Azure, GCP           │
-│  Private Cloud    → On-premise, dedicato      │
-│  Hybrid Cloud     → Public + Private          │
-│  Multi-Cloud      → Multiple Public Clouds    │
+│  Public Cloud     → AWS, Azure, GCP            │
+│  Private Cloud    → On-premise, dedicato       │
+│  Hybrid Cloud     → Public + Private           │
+│  Multi-Cloud      → Multiple Public Clouds     │
 │                                                │
 └────────────────────────────────────────────────┘
 ```
@@ -95,10 +95,11 @@ I **modelli di deployment** definiscono **dove** l'infrastruttura cloud è local
 - **Clienti**: Spotify, Twitter, Snapchat
 
 #### Altri Provider
-- **Alibaba Cloud**: Leader in Asia
-- **Oracle Cloud**: Focus database e enterprise
-- **IBM Cloud**: Focus enterprise e hybrid
-- **DigitalOcean**: Developer-friendly, semplice
+
+- **Alibaba Cloud**: Leader in Asia (~6% market share, Q3 2023)
+- **Oracle Cloud**: Focus database e enterprise (~3% market share, Q3 2023)
+- **IBM Cloud**: Focus enterprise e hybrid (~2% market share, Q3 2023)
+- **DigitalOcean**: Developer-friendly, semplice (<1% market share, Q3 2023)
 
 ### Vantaggi Public Cloud
 
@@ -143,10 +144,10 @@ I **modelli di deployment** definiscono **dove** l'infrastruttura cloud è local
                          │
         ┌────────────────┼────────────────┐
         │                │                │
-    ┌───▼───┐        ┌───▼───┐       ┌───▼───┐
-    │ EC2   │        │ EC2   │       │ EC2   │  Auto-scaling
-    │ (AZ-1)│        │ (AZ-2)│       │ (AZ-3)│
-    └───┬───┘        └───┬───┘       └───┬───┘
+    ┌───▼───┐        ┌───▼───┐        ┌───▼───┐
+    │ EC2   │        │ EC2   │        │ EC2   │  Auto-scaling
+    │ (AZ-1)│        │ (AZ-2)│        │ (AZ-3)│
+    └───┬───┘        └───┬───┘        └───┬───┘
         └────────────────┼────────────────┘
                          │
                   ┌──────▼──────┐
@@ -167,14 +168,14 @@ I **modelli di deployment** definiscono **dove** l'infrastruttura cloud è local
 ┌──────────────────────────────────────┐
 │         Organization Network         │
 │                                      │
-│   ┌──────────────────────────┐      │
-│   │   Private Cloud          │      │
-│   │   ┌────┐  ┌────┐  ┌────┐│      │
-│   │   │VM1 │  │VM2 │  │VM3 ││      │
-│   │   └────┘  └────┘  └────┘│      │
-│   │                          │      │
-│   │   [Dedicated Hardware]   │      │
-│   └──────────────────────────┘      │
+│   ┌──────────────────────────┐       │
+│   │   Private Cloud          │       │
+│   │   ┌────┐  ┌────┐  ┌────┐ │       │
+│   │   │VM1 │  │VM2 │  │VM3 │ │       │
+│   │   └────┘  └────┘  └────┘ │       │
+│   │                          │       │
+│   │   [Dedicated Hardware]   │       │
+│   └──────────────────────────┘       │
 │                                      │
 │   Access: Only Company Employees     │
 └──────────────────────────────────────┘
@@ -204,9 +205,9 @@ I **modelli di deployment** definiscono **dove** l'infrastruttura cloud è local
 ┌────────────────────────────────┐
 │   vCenter Server (Management)  │
 ├────────────────────────────────┤
-│  ┌──────┐  ┌──────┐  ┌──────┐ │
-│  │ESXi 1│  │ESXi 2│  │ESXi N│ │
-│  └──────┘  └──────┘  └──────┘ │
+│  ┌──────┐  ┌──────┐  ┌──────┐  │
+│  │ESXi 1│  │ESXi 2│  │ESXi N│  │
+│  └──────┘  └──────┘  └──────┘  │
 └────────────────────────────────┘
 ```
 
@@ -304,17 +305,17 @@ Corporate Datacenter
 ┌────────────────────────────────────────┐
 │         Hybrid Cloud                   │
 │                                        │
-│  ┌──────────────┐   ┌───────────────┐ │
-│  │Private Cloud │◄──┤  Integration  │ │
-│  │ On-Premise   │   │    Layer      │ │
-│  │              │   │  (VPN/DirectC)│ │
-│  └──────────────┘   └────────┬──────┘ │
-│                              │        │
-│  ┌──────────────┐            │        │
-│  │Public Cloud  │◄───────────┘        │
-│  │ AWS/Azure/GCP│                     │
-│  │              │                     │
-│  └──────────────┘                     │
+│  ┌──────────────┐   ┌───────────────┐  │
+│  │Private Cloud │◄──┤  Integration  │  │
+│  │ On-Premise   │   │    Layer      │  │
+│  │              │   │  (VPN/DirectC)│  │
+│  └──────────────┘   └────────┬──────┘  │
+│                              │         │
+│  ┌──────────────┐            │         │
+│  │Public Cloud  │◄───────────┘         │
+│  │ AWS/Azure/GCP│                      │
+│  │              │                      │
+│  └──────────────┘                      │
 └────────────────────────────────────────┘
 ```
 
@@ -363,9 +364,9 @@ Normal Load                Peak Load
 Primary Site (On-Premise)       DR Site (Public Cloud)
 ┌────────────────────┐          ┌────────────────────┐
 │  Production VMs    │          │  Standby VMs       │
-│  ┌──┐ ┌──┐ ┌──┐   │──Replica─┤  ┌──┐ ┌──┐ ┌──┐   │
-│  │ 1│ │ 2│ │ 3│   │          │  │ 1│ │ 2│ │ 3│   │
-│  └──┘ └──┘ └──┘   │          │  └──┘ └──┘ └──┘   │
+│  ┌──┐ ┌──┐ ┌──┐    │──Replica─┤  ┌──┐ ┌──┐ ┌──┐    │
+│  │ 1│ │ 2│ │ 3│    │          │  │ 1│ │ 2│ │ 3│    │
+│  └──┘ └──┘ └──┘    │          │  └──┘ └──┘ └──┘    │
 │   (Active)         │          │   (Standby)        │
 └────────────────────┘          └────────────────────┘
                      Failover →  (Active on failure)
@@ -394,7 +395,7 @@ Primary Site (On-Premise)       DR Site (Public Cloud)
 Dev/Test (Public Cloud)      Production (Private)
 ┌────────────────┐           ┌────────────────┐
 │  Agile dev     │  Deploy   │  Stable prod   │
-│  Quick spin-up │───────────▶  Controlled    │
+│  Quick spin-up │──────────▶ Controlled    │
 │  Cost-effective│           │  Secure        │
 └────────────────┘           └────────────────┘
 ```
@@ -444,21 +445,21 @@ Dev/Test (Public Cloud)      Production (Private)
 **Multi-Cloud** utilizza servizi di **multiple cloud provider** simultaneamente, per evitare lock-in e ottimizzare costi/performance.
 
 ```
-┌────────────────────────────────────────┐
-│        Multi-Cloud Strategy            │
-│                                        │
+┌──────────────────────────────────────┐
+│        Multi-Cloud Strategy          │
+│                                      │
 │  ┌───────────┐  ┌───────────┐        │
 │  │    AWS    │  │   Azure   │        │
 │  │ Compute   │  │   AI/ML   │        │
 │  │ Storage   │  │   AD      │        │
 │  └─────┬─────┘  └─────┬─────┘        │
-│        └────────┬──────┘              │
-│            ┌────▼────┐                │
-│            │   GCP   │                │
-│            │Big Data │                │
-│            │Analytics│                │
-│            └─────────┘                │
-└────────────────────────────────────────┘
+│        └────────┬──────┘             │
+│            ┌────▼────┐               │
+│            │   GCP   │               │
+│            │Big Data │               │
+│            │Analytics│               │
+│            └─────────┘               │
+└──────────────────────────────────────┘
 ```
 
 ### Differenza vs Hybrid
