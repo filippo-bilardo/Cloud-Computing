@@ -297,7 +297,7 @@ Output:
 
 ```bash
 cd ../java-app
-./mvnw spring-boot:run
+mvn spring-boot:run
 ```
 
 Attendi startup (~20s). Notifica: **"Porta 8080 disponibile"**
@@ -397,6 +397,26 @@ docker stop java-test && docker rm java-test
    - Controlla che `.devcontainer/devcontainer.json` esista
    - Verifica che il JSON sia valido (usa [jsonlint.com](https://jsonlint.com/))
    - Rimuovi features non necessarie
+
+### Problema: `./mvnw: No such file or directory`
+
+**Causa**: Il progetto non ha il Maven Wrapper configurato.
+
+**Soluzione**: Usa direttamente `mvn` invece di `./mvnw`:
+
+```bash
+cd java-app
+mvn spring-boot:run
+```
+
+Il Codespace ha già Maven installato globalmente (`mvn --version`), quindi non serve il wrapper.
+
+**Alternativa - Aggiungere Maven Wrapper** (opzionale):
+```bash
+cd java-app
+mvn wrapper:wrapper
+./mvnw spring-boot:run  # Ora funziona!
+```
 
 ### Problema: Node.js o Java non trovati
 

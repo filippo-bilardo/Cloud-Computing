@@ -238,7 +238,7 @@ npm run dev    # nodemon auto-reload
 
 # 3. Terminal 2: Java app
 cd java-app
-./mvnw spring-boot:run
+mvn spring-boot:run
 
 # 4. Terminal 3: Docker build
 docker build -t myapp nodejs-app

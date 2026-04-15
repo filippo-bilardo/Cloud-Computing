@@ -141,7 +141,7 @@ npm start
 
 # 5. Testa app Java
 cd esempi/java-app
-./mvnw spring-boot:run
+mvn spring-boot:run
 # → http://localhost:8080
 ```
 
