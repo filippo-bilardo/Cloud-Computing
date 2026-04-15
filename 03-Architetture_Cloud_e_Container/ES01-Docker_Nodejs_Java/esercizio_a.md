@@ -67,17 +67,6 @@ Nome: `.devcontainer/devcontainer.json`
   "name": "Node.js + Java Lab",
   "image": "mcr.microsoft.com/devcontainers/universal:2",
   
-  "features": {
-    "ghcr.io/devcontainers/features/node:1": {
-      "version": "20"
-    },
-    "ghcr.io/devcontainers/features/java:1": {
-      "version": "21",
-      "installMaven": true
-    },
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
-  },
-  
   "customizations": {
     "vscode": {
       "extensions": [
@@ -88,12 +77,13 @@ Nome: `.devcontainer/devcontainer.json`
     }
   },
   
-  "forwardPorts": [3000, 8080],
-  "postCreateCommand": "echo '✅ Codespace ready!'"
+  "forwardPorts": [3000, 8080]
 }
 ```
 
 **Commit**: Messaggio "Add devcontainer config"
+
+> **📝 Nota**: L'immagine `universal:2` include già Node.js (v20) e Java (OpenJDK 21) pre-installati, quindi non servono features aggiuntive. Questo accelera il setup del Codespace!
 
 ---
 
@@ -370,6 +360,70 @@ docker stop java-test && docker rm java-test
 3. Terminal con `node --version` e `java --version`
 4. Browser con output Node.js API
 5. Browser con output Java API
+
+---
+
+## ⚠️ Troubleshooting
+
+### Problema: "Recovery mode due to configuration error"
+
+**Causa**: Il devcontainer.json ha errori di sintassi o features non disponibili.
+
+**Soluzione**:
+
+1. **Usa la configurazione semplificata** (già nell'esercizio):
+   ```json
+   {
+     "name": "Node.js + Java Lab",
+     "image": "mcr.microsoft.com/devcontainers/universal:2",
+     "customizations": {
+       "vscode": {
+         "extensions": [
+           "dbaeumer.vscode-eslint",
+           "redhat.java",
+           "ms-azuretools.vscode-docker"
+         ]
+       }
+     },
+     "forwardPorts": [3000, 8080]
+   }
+   ```
+
+2. **Ricostruisci il container**:
+   - In Codespaces: `Cmd/Ctrl + Shift + P` → **"Codespaces: Rebuild Container"**
+   - Oppure: Click su **"Rebuild Container"** nella notifica di errore
+
+3. **Verifica il file**:
+   - Controlla che `.devcontainer/devcontainer.json` esista
+   - Verifica che il JSON sia valido (usa [jsonlint.com](https://jsonlint.com/))
+   - Rimuovi features non necessarie
+
+### Problema: Node.js o Java non trovati
+
+**Verifica versioni**:
+```bash
+node --version    # Deve mostrare v20.x
+npm --version     # Deve mostrare 10.x
+java --version    # Deve mostrare OpenJDK 21
+mvn --version     # Deve mostrare Maven 3.x
+```
+
+Se mancanti, l'immagine `universal:2` include già tutto! Probabilmente il Codespace non ha finito il setup.
+
+### Problema: Port forwarding non funziona
+
+1. **Check ports exposed**:
+   ```bash
+   # Nel terminal Codespace
+   cd nodejs-app
+   npm start
+   ```
+
+2. **Guarda le notifiche** VS Code in basso a destra: "Port 3000 is available"
+
+3. **Manual port forward**:
+   - Ports tab → Add Port → 3000
+   - Click sull'icona 🌐 per aprire nel browser
 
 ---
 

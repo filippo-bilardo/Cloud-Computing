@@ -1,38 +1,30 @@
-# 🚀 Esercizio D: Stack LAMP + Node.js con Nginx Proxy
+# 🐘 Esercizio D: Stack LAMP Classico
 
 ## Obiettivo
 
-Creare un ambiente di sviluppo completo con **LAMP stack** (Linux, Apache, MySQL, PHP) + **Node.js**, orchestrato con **docker-compose** e accessibile tramite **Nginx reverse proxy** in GitHub Codespaces.
+Creare un ambiente di sviluppo **LAMP stack** (Linux, Apache, MySQL, PHP) completo, orchestrato con **docker-compose** e accessibile tramite GitHub Codespaces.
 
 ## Architettura
 
 ```
-                    ┌─────────────────┐
-                    │  Nginx Proxy    │
-                    │   (Port 80)     │
-                    └────────┬────────┘
-                             │
-                    ┌────────┴────────┐
-                    │                 │
-           ┌────────▼────────┐   ┌───▼──────────┐
-           │  Apache + PHP   │   │   Node.js    │
-           │   (LAMP Web)    │   │  (Port 3000) │
-           │   (Port 80)     │   └──────┬───────┘
-           └────────┬────────┘          │
-                    │                   │
-                    └─────────┬─────────┘
-                              │
-                    ┌─────────▼────────┐
-                    │     MariaDB      │
-                    │   (Port 3306)    │
-                    └──────────────────┘
+┌─────────────────┐
+│  Client Browser │
+└────────┬────────┘
+         │ HTTP :80
+┌────────▼────────┐
+│  Apache + PHP   │
+│   (Port 80)     │
+└────────┬────────┘
+         │
+┌────────▼────────┐
+│     MariaDB     │
+│   (Port 3306)   │
+└─────────────────┘
 ```
 
 **Componenti:**
 - **Apache + PHP 8.2**: Web server per applicazioni PHP
-- **Node.js**: Runtime JavaScript per backend API
-- **MariaDB**: Database relazionale
-- **Nginx**: Reverse proxy per routing richieste
+- **MariaDB**: Database relazionale MySQL-compatible
 
 ---
 
@@ -52,24 +44,19 @@ Creare un ambiente di sviluppo completo con **LAMP stack** (Linux, Apache, MySQL
 Crea file `STRUCTURE.md` per visualizzare la struttura:
 
 ```
-lamp-nodejs-stack/
+lamp-stack/
 ├── .devcontainer/
-│   ├── devcontainer.json
-│   └── Dockerfile
-├── docker/
-│   ├── docker-compose.yml
-│   ├── nginx/
-│   │   └── nginx.conf
-│   └── apache/
-│       └── sites-available/
-│           └── 000-default.conf
+│   └── devcontainer.json
+├── docker-compose.yml
+├── apache/
+│   └── sites-available/
+│       └── 000-default.conf
 ├── www/
-│   ├── php/
-│   │   └── index.php
-│   └── nodejs/
-│       ├── package.json
-│       └── server.js
+│   └── index.php
+├── mysql/
+│   └── init.sql
 ├── .env.example
+├── .env
 └── README.md
 ```
 
@@ -77,21 +64,16 @@ lamp-nodejs-stack/
 
 ```json
 {
-  "name": "LAMP + Node.js Stack",
-  "dockerComposeFile": "../docker/docker-compose.yml",
-  "service": "devcontainer",
-  "workspaceFolder": "/workspace",
-  
-  "features": {
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
-  },
+  "name": "LAMP Stack",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "webserver",
+  "workspaceFolder": "/var/www/html",
   
   "customizations": {
     "vscode": {
       "extensions": [
         "felixfbecker.php-debug",
         "bmewburn.vscode-intelephense-client",
-        "dbaeumer.vscode-eslint",
         "ms-azuretools.vscode-docker",
         "mtxr.sqltools",
         "mtxr.sqltools-driver-mysql"
@@ -113,20 +95,17 @@ lamp-nodejs-stack/
     }
   },
   
-  "forwardPorts": [80, 3000, 3306, 8080],
+  "forwardPorts": [80, 3306],
   "portsAttributes": {
     "80": {
-      "label": "Nginx Proxy"
-    },
-    "3000": {
-      "label": "Node.js App"
-    },
-    "8080": {
       "label": "Apache PHP"
+    },
+    "3306": {
+      "label": "MariaDB"
     }
   },
   
-  "postCreateCommand": "echo '✅ LAMP + Node.js Stack ready!' && docker-compose version"
+  "postCreateCommand": "echo '✅ LAMP Stack ready!'"
 }
 ```
 
@@ -158,7 +137,7 @@ NODE_ENV=development
 cp .env.example .env
 ```
 
-### Step 2.2: Crea `docker/docker-compose.yml`
+### Step 2.2: Crea `docker-compose.yml`
 
 ```yaml
 version: "3.8"
@@ -168,43 +147,13 @@ networks:
     driver: bridge
 
 services:
-  # Dev Container - ambiente di sviluppo principale
-  devcontainer:
-    build:
-      context: ..
-      dockerfile: .devcontainer/Dockerfile
-    container_name: lamp_devcontainer
-    volumes:
-      - ..:/workspace:cached
-    command: sleep infinity
-    networks:
-      - lamp_network
-
-  # Nginx Reverse Proxy
-  nginx:
-    image: nginx:1.25-alpine
-    container_name: lamp_nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - webserver
-      - nodejs
-    networks:
-      - lamp_network
-
   # Apache + PHP Web Server
   webserver:
     image: php:8.2-apache-bullseye
     container_name: lamp_webserver
     restart: unless-stopped
-    expose:
-      - "80"
-      - "8080"
     ports:
-      - "8080:80"  # Accesso diretto (debug)
+      - "80:80"
     depends_on:
       - mariadb
     environment:
@@ -212,8 +161,6 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_HOST=mariadb
       - DB_DATABASE=${DB_DATABASE}
-      - WEBSERVER_ADMIN_USERNAME=${WEBSERVER_ADMIN_USERNAME}
-      - WEBSERVER_ADMIN_PASSWORD=${WEBSERVER_ADMIN_PASSWORD}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost"]
       interval: 30s
@@ -221,42 +168,16 @@ services:
       retries: 3
       start_period: 20s
     volumes:
-      - ../www/php:/var/www/html
+      - ./www:/var/www/html
       - ./apache/sites-available/000-default.conf:/etc/apache2/sites-available/000-default.conf
     command: >
       bash -c "
+      apt-get update &&
+      apt-get install -y curl &&
       docker-php-ext-install mysqli pdo pdo_mysql &&
       a2enmod rewrite &&
       apache2-foreground
       "
-    networks:
-      - lamp_network
-
-  # Node.js Application Server
-  nodejs:
-    image: node:20-bullseye
-    container_name: lamp_nodejs
-    restart: unless-stopped
-    expose:
-      - "3000"
-      - "3001"
-      - "3002"
-    ports:
-      - "3000:3000"  # Porta principale
-      - "3001:3001"  # Porte aggiuntive
-      - "3002:3002"
-    environment:
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_HOST=mariadb
-      - DB_DATABASE=${DB_DATABASE}
-      - NODE_ENV=development
-    working_dir: /app
-    command: bash -c "npm install && npm start"
-    volumes:
-      - ../www/nodejs:/app
-    depends_on:
-      - mariadb
     networks:
       - lamp_network
 
@@ -291,134 +212,11 @@ volumes:
     driver: local
 ```
 
-### Step 2.3: Crea `.devcontainer/Dockerfile`
-
-```dockerfile
-FROM mcr.microsoft.com/devcontainers/base:ubuntu
-
-# Install Docker CLI
-RUN apt-get update && apt-get install -y \
-    docker.io \
-    docker-compose \
-    curl \
-    wget \
-    git \
-    && apt-get clean
-
-# Install PHP CLI (per testing)
-RUN apt-get install -y php8.1-cli php8.1-mysql php8.1-curl
-
-# Install Node.js
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs
-
-USER vscode
-```
-
 ---
 
-## Parte 3: Configurazione Nginx Proxy
+## Parte 3: Applicazioni di Esempio
 
-### Step 3.1: Crea `docker/nginx/nginx.conf`
-
-```nginx
-events {
-    worker_connections 1024;
-}
-
-http {
-    # Upstream per Apache/PHP
-    upstream php_backend {
-        server webserver:80;
-    }
-
-    # Upstream per Node.js
-    upstream nodejs_backend {
-        server nodejs:3000;
-    }
-
-    # Server principale - Reverse Proxy
-    server {
-        listen 80;
-        server_name localhost;
-
-        # Log configuration
-        access_log /var/log/nginx/access.log;
-        error_log /var/log/nginx/error.log;
-
-        # Routing per applicazioni PHP
-        location /php/ {
-            proxy_pass http://php_backend/;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-        }
-
-        # Routing per Node.js API
-        location /api/ {
-            proxy_pass http://nodejs_backend/;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-            
-            # WebSocket support
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection "upgrade";
-        }
-
-        # Home page
-        location / {
-            return 200 '
-<!DOCTYPE html>
-<html>
-<head>
-    <title>LAMP + Node.js Stack</title>
-    <style>
-        body { font-family: Arial; padding: 40px; background: #f0f0f0; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
-        h1 { color: #333; }
-        .service { background: #e8f4f8; padding: 15px; margin: 10px 0; border-left: 4px solid #2196F3; }
-        a { color: #2196F3; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🚀 LAMP + Node.js Stack</h1>
-        <p>Welcome to your development environment!</p>
-        
-        <div class="service">
-            <h3>📦 PHP Application</h3>
-            <a href="/php/" target="_blank">Open PHP App →</a>
-        </div>
-        
-        <div class="service">
-            <h3>⚡ Node.js API</h3>
-            <a href="/api/" target="_blank">Open Node.js API →</a>
-        </div>
-        
-        <div class="service">
-            <h3>🗄️ Database</h3>
-            <p>MariaDB running on port 3306</p>
-        </div>
-    </div>
-</body>
-</html>
-            ';
-            add_header Content-Type text/html;
-        }
-    }
-}
-```
-
----
-
-## Parte 4: Applicazioni di Esempio
-
-### Step 4.1: PHP App - `www/php/index.php`
+### Step 3.1: PHP App - `www/index.php`
 
 ```php
 <?php
@@ -517,168 +315,14 @@ try {
         <?php endif; ?>
         
         <div style="margin-top: 30px;">
-            <a href="/api/" style="color: #4299E1; text-decoration: none;">→ View Node.js API</a>
+            <p style="color: #718096;">LAMP Stack: Linux + Apache + MySQL + PHP</p>
         </div>
     </div>
 </body>
 </html>
 ```
 
-### Step 4.2: Node.js App - `www/nodejs/package.json`
-
-```json
-{
-  "name": "nodejs-lamp-app",
-  "version": "1.0.0",
-  "description": "Node.js app for LAMP stack",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "mysql2": "^3.6.5",
-    "cors": "^2.8.5"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.2"
-  }
-}
-```
-
-### Step 4.3: Node.js App - `www/nodejs/server.js`
-
-```javascript
-const express = require('express');
-const mysql = require('mysql2/promise');
-const cors = require('cors');
-
-const app = express();
-app.use(cors());
-app.use(express.json());
-
-const PORT = process.env.PORT || 3000;
-
-// Database configuration
-const dbConfig = {
-  host: process.env.DB_HOST || 'mariadb',
-  user: process.env.DB_USERNAME || 'lamp_user',
-  password: process.env.DB_PASSWORD || 'lamp_password',
-  database: process.env.DB_DATABASE || 'lamp_db'
-};
-
-// Create connection pool
-const pool = mysql.createPool(dbConfig);
-
-// Routes
-app.get('/', async (req, res) => {
-  res.json({
-    service: 'Node.js API',
-    version: '1.0.0',
-    environment: process.env.NODE_ENV,
-    database: dbConfig.host,
-    endpoints: {
-      users: '/api/users',
-      products: '/api/products',
-      health: '/health'
-    }
-  });
-});
-
-app.get('/health', async (req, res) => {
-  try {
-    const [rows] = await pool.query('SELECT 1');
-    res.json({ 
-      status: 'ok', 
-      database: 'connected',
-      uptime: process.uptime()
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      status: 'error', 
-      database: 'disconnected',
-      error: error.message 
-    });
-  }
-});
-
-// Users CRUD
-app.get('/api/users', async (req, res) => {
-  try {
-    const [rows] = await pool.query('SELECT * FROM users');
-    res.json(rows);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/api/users', async (req, res) => {
-  const { name, email } = req.body;
-  try {
-    const [result] = await pool.query(
-      'INSERT INTO users (name, email) VALUES (?, ?)',
-      [name, email]
-    );
-    res.status(201).json({ id: result.insertId, name, email });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Products table (esempio aggiuntivo)
-app.get('/api/products', async (req, res) => {
-  try {
-    // Create table if not exists
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS products (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(100),
-        price DECIMAL(10,2),
-        category VARCHAR(50),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-    
-    // Insert sample data if empty
-    const [count] = await pool.query('SELECT COUNT(*) as count FROM products');
-    if (count[0].count === 0) {
-      await pool.query(`
-        INSERT INTO products (name, price, category) VALUES
-        ('Laptop', 999.99, 'Electronics'),
-        ('Mouse', 29.99, 'Electronics'),
-        ('Desk', 299.99, 'Furniture')
-      `);
-    }
-    
-    const [rows] = await pool.query('SELECT * FROM products');
-    res.json(rows);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Start server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log('═══════════════════════════════════════════');
-  console.log('✅ Node.js API Server Started');
-  console.log('═══════════════════════════════════════════');
-  console.log(`🌐 Server: http://localhost:${PORT}`);
-  console.log(`📊 Health: http://localhost:${PORT}/health`);
-  console.log(`👥 Users: http://localhost:${PORT}/api/users`);
-  console.log(`📦 Products: http://localhost:${PORT}/api/products`);
-  console.log('═══════════════════════════════════════════');
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('🛑 SIGTERM received, closing server...');
-  pool.end();
-  process.exit(0);
-});
-```
-
-### Step 4.4: Database Init - `docker/mysql/init.sql`
+### Step 3.2: Database Init - `mysql/init.sql`
 
 ```sql
 -- Initial database setup
@@ -721,9 +365,9 @@ CREATE INDEX idx_category ON products(category);
 
 ---
 
-## Parte 5: Apache Configuration
+## Parte 4: Apache Configuration
 
-### `docker/apache/sites-available/000-default.conf`
+### Step 4.1: `apache/sites-available/000-default.conf`
 
 ```apache
 <VirtualHost *:80>
@@ -749,13 +393,12 @@ CREATE INDEX idx_category ON products(category);
 
 ---
 
-## Parte 6: Testing e Deploy
+## Parte 5: Testing e Deploy
 
-### Step 6.1: Avvia lo Stack
+### Step 5.1: Avvia lo Stack
 
 ```bash
-# In Codespaces terminal
-cd docker
+# In Codespaces terminal (o locale)
 docker-compose up -d
 
 # Controlla i container
@@ -767,32 +410,19 @@ docker-compose logs -f
 
 **Attendi**:
 - MariaDB: ~10s
-- Apache: ~15s
-- Node.js: ~20s (npm install)
-- Nginx: ~5s
+- Apache: ~20s (installa extensions PHP)
 
-### Step 6.2: Test Servizi
+### Step 5.2: Test Applicazione
 
 ```bash
-# Test Nginx home
+# Test PHP app
 curl http://localhost
 
-# Test PHP app
-curl http://localhost/php/
-
-# Test Node.js API
-curl http://localhost/api/
-curl http://localhost/api/users
-curl http://localhost/api/products
-
-# Accesso diretto Apache (debug)
-curl http://localhost:8080
-
-# Accesso diretto Node.js (debug)
-curl http://localhost:3000
+# Apri nel browser (Codespaces)
+# Click sulla notifica "Porta 80 disponibile"
 ```
 
-### Step 6.3: Test Database Connection
+### Step 5.3: Test Database Connection
 
 ```bash
 # Entra nel container MariaDB
@@ -804,80 +434,91 @@ SELECT * FROM products;
 exit;
 ```
 
-### Step 6.4: Accesso da Browser (Codespaces)
+### Step 5.4: Accesso da Browser (Codespaces)
 
-Codespaces forward automaticamente le porte:
+Codespaces forward automaticamente la porta 80:
 
-- **Porta 80** (Nginx): Click "Open in Browser"
-- **Porta 8080** (Apache): Accesso diretto PHP
-- **Porta 3000** (Node.js): Accesso diretto API
+- **Porta 80** (Apache): Click "Open in Browser"
 
 URL formato: `https://<codespace>-80.preview.app.github.dev`
 
 ---
 
-## Parte 7: Development Workflow
+## Parte 6: Development Workflow
 
-### Modifica Codice
+### Modifica Codice PHP
 
 ```bash
-# Modifica PHP
-vim www/php/index.php
+# Modifica index.php
+vim www/index.php
 # → Auto-reload (volume mounted)
-
-# Modifica Node.js
-vim www/nodejs/server.js
-# → Riavvia container: docker-compose restart nodejs
+# → Refresh browser per vedere cambiamenti
 ```
 
-### Aggiungi Nuova Applicazione PHP
+### Aggiungi Nuova Pagina PHP
 
 ```bash
 # Crea nuova cartella
-mkdir -p www/php/blog
+mkdir -p www/blog
 
 # Crea index.php
-cat > www/php/blog/index.php << 'EOF'
+cat > www/blog/index.php << 'EOF'
 <?php
 echo "<h1>My Blog</h1>";
 echo "PHP Version: " . phpversion();
 ?>
 EOF
 
-# Accessibile su: http://localhost/php/blog/
+# Accessibile su: http://localhost/blog/
 ```
 
-### Aggiungi Porta Node.js
+### Aggiungi Script PHP (CRUD Example)
 
-Modifica `docker-compose.yml`:
-
-```yaml
-nodejs:
-  ports:
-    - "3000:3000"
-    - "3001:3001"  # Nuova porta
-```
-
-Riavvia:
 ```bash
-docker-compose up -d
+# Crea API PHP per gestione prodotti
+cat > www/api.php << 'EOF'
+<?php
+header('Content-Type: application/json');
+
+$host = getenv('DB_HOST') ?: 'mariadb';
+$dbname = getenv('DB_DATABASE') ?: 'lamp_db';
+$username = getenv('DB_USERNAME') ?: 'lamp_user';
+$password = getenv('DB_PASSWORD') ?: 'lamp_password';
+
+try {
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    // GET all products
+    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+        $stmt = $pdo->query("SELECT * FROM products");
+        $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode($products);
+    }
+    
+} catch(PDOException $e) {
+    http_response_code(500);
+    echo json_encode(['error' => $e->getMessage()]);
+}
+?>
+EOF
+
+# Test: curl http://localhost/api.php
 ```
 
 ---
 
-## Parte 8: Troubleshooting
+## Parte 7: Troubleshooting
 
 ### Container non si avvia
 
 ```bash
 # Controlla logs
 docker-compose logs webserver
-docker-compose logs nodejs
 docker-compose logs mariadb
 
-# Ricostruisci immagini
-docker-compose build --no-cache
-docker-compose up -d
+# Riavvia servizi
+docker-compose restart
 ```
 
 ### Database connection failed
@@ -894,15 +535,18 @@ docker-compose down -v  # ATTENZIONE: cancella dati!
 docker-compose up -d
 ```
 
-### Nginx 502 Bad Gateway
+### Apache non risponde
 
 ```bash
-# Verifica upstream services
+# Verifica container attivo
 docker-compose ps
 
-# Test connessione interna
-docker exec -it lamp_nginx wget -O- http://webserver
-docker exec -it lamp_nginx wget -O- http://nodejs:3000
+# Check logs Apache
+docker-compose logs webserver
+
+# Entra nel container per debug
+docker exec -it lamp_webserver bash
+curl http://localhost
 ```
 
 ---
