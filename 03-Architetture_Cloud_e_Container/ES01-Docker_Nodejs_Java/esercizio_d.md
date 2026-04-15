@@ -33,8 +33,8 @@ Creare un ambiente di sviluppo **LAMP stack** (Linux, Apache, MySQL, PHP) comple
 ### Step 1.1: Crea Repository GitHub
 
 1. GitHub → **New repository**
-2. Nome: `lamp-nodejs-stack`
-3. Description: "LAMP + Node.js development environment"
+2. Nome: `lamp-stack`
+3. Description: "LAMP development environment"
 4. Public ✅
 5. Initialize with README ✅
 6. Create repository
@@ -64,35 +64,28 @@ lamp-stack/
 
 ```json
 {
-  "name": "LAMP Stack",
-  "dockerComposeFile": "../docker-compose.yml",
-  "service": "webserver",
-  "workspaceFolder": "/var/www/html",
+  "name": "LAMP Stack Dev",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
   
   "customizations": {
     "vscode": {
       "extensions": [
         "felixfbecker.php-debug",
         "bmewburn.vscode-intelephense-client",
-        "ms-azuretools.vscode-docker",
-        "mtxr.sqltools",
-        "mtxr.sqltools-driver-mysql"
-      ],
-      "settings": {
-        "php.validate.executablePath": "/usr/local/bin/php",
-        "sqltools.connections": [
-          {
-            "name": "MariaDB",
-            "driver": "MySQL",
-            "server": "mariadb",
-            "port": 3306,
-            "database": "lamp_db",
-            "username": "lamp_user",
-            "password": "lamp_password"
-          }
-        ]
-      }
+        "ms-azuretools.vscode-docker"
+      ]
     }
+  },
+  
+  "forwardPorts": [80, 3306],
+  
+  "postCreateCommand": "docker-compose up -d && echo '✅ LAMP stack started!'"
+}
+```
   },
   
   "forwardPorts": [80, 3306],
@@ -103,11 +96,13 @@ lamp-stack/
     "3306": {
       "label": "MariaDB"
     }
-  },
+  "forwardPorts": [80, 3306],
   
-  "postCreateCommand": "echo '✅ LAMP Stack ready!'"
+  "postCreateCommand": "docker-compose up -d && echo '✅ LAMP stack started!'"
 }
 ```
+
+> **📝 Nota**: Questo dev container usa Docker-in-Docker per gestire i container LAMP dall'esterno, non entrando nel container webserver. Questo permette di usare `docker-compose` e `docker` normalmente.
 
 ---
 
@@ -126,9 +121,6 @@ DB_HOST=mariadb
 # Webserver Admin Credentials
 WEBSERVER_ADMIN_USERNAME=admin
 WEBSERVER_ADMIN_PASSWORD=admin123
-
-# Node.js Environment
-NODE_ENV=development
 ```
 
 **Importante**: Copia `.env.example` → `.env` (git-ignored)
@@ -393,54 +385,146 @@ CREATE INDEX idx_category ON products(category);
 
 ---
 
-## Parte 5: Testing e Deploy
+## Parte 5: Creazione Codespace e Testing
 
-### Step 5.1: Avvia lo Stack
+### Step 5.1: Crea Codespace
+
+1. Vai sul tuo repository GitHub
+2. Click su **Code** (verde)
+3. Tab **Codespaces**
+4. Click **Create codespace on main**
+5. Attendi 2-3 minuti → VS Code si apre nel browser!
+
+Il dev container:
+- Legge `docker-compose.yml`
+- Avvia i servizi (Apache + MariaDB)
+- Monta i volumi
+- Forward delle porte
+
+### Step 5.2: Verifica Container Attivi
+
+Nel terminal Codespace:
 
 ```bash
-# In Codespaces terminal (o locale)
-docker-compose up -d
-
 # Controlla i container
 docker-compose ps
 
-# Logs
+# Output atteso:
+# NAME              IMAGE                           STATUS
+# lamp_webserver    php:8.2.5-apache-bullseye      Up
+# lamp_mariadb      mariadb                         Up
+
+# Logs in tempo reale
 docker-compose logs -f
+
+# Stop logs: Ctrl+C
 ```
 
-**Attendi**:
-- MariaDB: ~10s
-- Apache: ~20s (installa extensions PHP)
+**Attendi startup**:
+- MariaDB: ~10-15s
+- Apache: ~20-30s (installa extensions PHP)
 
-### Step 5.2: Test Applicazione
-
-```bash
-# Test PHP app
-curl http://localhost
-
-# Apri nel browser (Codespaces)
-# Click sulla notifica "Porta 80 disponibile"
-```
-
-### Step 5.3: Test Database Connection
+### Step 5.3: Crea Database di Esempio
 
 ```bash
 # Entra nel container MariaDB
 docker exec -it lamp_mariadb mysql -u lamp_user -plamp_password lamp_db
 
-# Query
+# Verifica che il database esista
+SHOW DATABASES;
+
+# Verifica tabelle create da init.sql
+SHOW TABLES;
+
+# Verifica dati nelle tabelle
 SELECT * FROM users;
 SELECT * FROM products;
+
+# Esci
 exit;
 ```
 
-### Step 5.4: Accesso da Browser (Codespaces)
+**Output atteso**:
+```
+mysql> SELECT * FROM users;
++----+-----------+-----------------------+
+| id | name      | email                 |
++----+-----------+-----------------------+
+|  1 | John Doe  | john@example.com      |
+|  2 | Jane Smith| jane@example.com      |
++----+-----------+-----------------------+
 
-Codespaces forward automaticamente la porta 80:
+mysql> SELECT * FROM products;
++----+-----------+--------+
+| id | name      | price  |
++----+-----------+--------+
+|  1 | Laptop    | 999.99 |
+|  2 | Mouse     |  29.99 |
++----+-----------+--------+
+```
 
-- **Porta 80** (Apache): Click "Open in Browser"
+### Step 5.4: Verifica Sito Web
 
-URL formato: `https://<codespace>-80.preview.app.github.dev`
+**Metodo 1: curl (dal terminal)**
+
+```bash
+# Test homepage
+curl http://localhost
+
+# Output atteso: HTML con titolo "LAMP Stack - Home"
+```
+
+**Metodo 2: Browser (Codespaces)**
+
+1. Guarda le notifiche in basso a destra: **"Porta 80 disponibile"**
+2. Click su **"Open in Browser"** o sull'icona 🌐
+3. URL formato: `https://<codespace>-80.preview.app.github.dev`
+
+**Cosa dovresti vedere**:
+- Homepage con titolo "LAMP Stack - Home"
+- Lista utenti dal database
+- Lista prodotti dal database
+- Informazioni PHP (versione, estensioni)
+
+### Step 5.5: Test Connessione Database dalla Web App
+
+Nel browser, vai su:
+```
+https://<codespace>-80.preview.app.github.dev/db-test.php
+```
+
+Crea il file di test:
+
+```bash
+cat > www/db-test.php << 'EOF'
+<?php
+$host = getenv('DB_HOST');
+$user = getenv('DB_USERNAME');
+$pass = getenv('DB_PASSWORD');
+$db = getenv('DB_DATABASE');
+
+try {
+    $pdo = new PDO("mysql:host=$host;dbname=$db", $user, $pass);
+    echo "<h1>✅ Connessione Database OK!</h1>";
+    
+    // Query users
+    $stmt = $pdo->query("SELECT * FROM users");
+    $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    echo "<h2>Utenti:</h2><ul>";
+    foreach($users as $user) {
+        echo "<li>{$user['name']} - {$user['email']}</li>";
+    }
+    echo "</ul>";
+    
+} catch(PDOException $e) {
+    echo "<h1>❌ Errore: " . $e->getMessage() . "</h1>";
+}
+?>
+EOF
+```
+
+Refresh browser → Dovresti vedere la lista utenti!
 
 ---
 
@@ -449,11 +533,15 @@ URL formato: `https://<codespace>-80.preview.app.github.dev`
 ### Modifica Codice PHP
 
 ```bash
-# Modifica index.php
-vim www/index.php
-# → Auto-reload (volume mounted)
+# Modifica index.php (dal workspace root)
+code www/index.php
+
+# I file sono montati come volume in docker-compose.yml
+# Le modifiche sono visibili IMMEDIATAMENTE nel container
 # → Refresh browser per vedere cambiamenti
 ```
+
+> **💡 Tip**: Non devi entrare nel container per modificare i file! Lavora direttamente dalla cartella `www/` nel tuo workspace Codespaces. I volumi Docker sincronizzano automaticamente.
 
 ### Aggiungi Nuova Pagina PHP
 
@@ -510,6 +598,39 @@ EOF
 
 ## Parte 7: Troubleshooting
 
+### ❌ `docker-compose: command not found`
+
+**Causa**: Stai usando il vecchio devcontainer.json che entra nel service webserver (che non ha Docker).
+
+**Soluzione**: Aggiorna `.devcontainer/devcontainer.json` con la configurazione corretta:
+
+```json
+{
+  "name": "LAMP Stack Dev",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "felixfbecker.php-debug",
+        "bmewburn.vscode-intelephense-client",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  },
+  
+  "forwardPorts": [80, 3306],
+  
+  "postCreateCommand": "docker-compose up -d && echo '✅ LAMP stack started!'"
+}
+```
+
+Poi **Rebuild Container**: `Cmd/Ctrl + Shift + P` → "Codespaces: Rebuild Container"
+
 ### Container non si avvia
 
 ```bash
@@ -557,12 +678,10 @@ curl http://localhost
 - [ ] `.devcontainer/devcontainer.json` configurato
 - [ ] `docker-compose.yml` completo
 - [ ] File `.env` creato (da `.env.example`)
-- [ ] Nginx configurato
+- [ ] Apache configurato
 - [ ] App PHP funzionante
-- [ ] App Node.js funzionante
 - [ ] Database MariaDB operativo
-- [ ] Nginx proxy routing corretto
-- [ ] Test su tutte le porte superati
+- [ ] Test connessione database superato
 - [ ] Accesso da browser Codespaces OK
 
 ---
@@ -572,9 +691,8 @@ curl http://localhost
 1. **Repository GitHub** con tutti i file
 2. **Screenshot Codespaces** con tutti i container attivi (`docker-compose ps`)
 3. **Screenshot Browser**:
-   - Nginx home page
+   - Apache home page
    - PHP app con lista utenti
-   - Node.js API JSON response
 4. **File RELAZIONE.md** con:
    - Architettura spiegata
    - Scelte tecniche
@@ -586,7 +704,7 @@ curl http://localhost
 ## 🎯 Bonus
 
 - [ ] Aggiungere phpMyAdmin per gestione DB visuale
-- [ ] Implementare autenticazione JWT nell'API Node.js
+- [ ] Implementare autenticazione con sessioni PHP
 - [ ] Aggiungere Redis per caching
 - [ ] SSL/TLS con certificati auto-firmati
 - [ ] Monitoring con Prometheus + Grafana
@@ -598,8 +716,8 @@ curl http://localhost
 
 Dopo aver completato questo esercizio, sarai in grado di:
 - Creare stack multi-servizio con docker-compose
-- Configurare reverse proxy Nginx
-- Integrare PHP e Node.js con database condiviso
+- Configurare networking tra container Docker
+- Integrare PHP con database per applicazioni web
 - Deployare su ambiente cloud (AWS, Azure, GCP)
 - Scalare orizzontalmente con Kubernetes
 
