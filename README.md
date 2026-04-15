@@ -537,15 +537,5 @@ Questo corso offre una formazione completa sulle tecnologie cloud computing, dal
 
 ---
 
-## **Carico Didattico**
-
-- **CFU**: 6-9 crediti
-- **Ore totali**: 60-90 ore
-- **Lezioni frontali**: 40-60 ore
-- **Laboratorio**: 20-30 ore
-- **Studio individuale**: 90-135 ore
-
----
-
-*Indice aggiornato per l'anno accademico 2025-2026*
+*Ultimo aggiornamento: 15/04/2026*
 
