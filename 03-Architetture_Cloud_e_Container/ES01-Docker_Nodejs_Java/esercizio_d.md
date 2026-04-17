@@ -1,724 +1,498 @@
-# 🐘 Esercizio D: Stack LAMP Classico
+# Esercizio LAMP: Ambiente di Sviluppo con Docker Compose e GitHub Codespaces
 
 ## Obiettivo
 
-Creare un ambiente di sviluppo **LAMP stack** (Linux, Apache, MySQL, PHP) completo, orchestrato con **docker-compose** e accessibile tramite GitHub Codespaces.
+Realizzare un ambiente di sviluppo **LAMP** (Linux, Apache, MySQL, PHP) completo e riproducibile, orchestrato con **Docker Compose** e accessibile tramite **GitHub Codespaces**. Lo studente imparerà a:
 
-## Architettura
+- Configurare un **Dev Container** per GitHub Codespaces
+- Orchestrare più container (web, database, phpMyAdmin) con **Docker Compose**
+- Sviluppare e testare un'applicazione PHP con persistenza dei dati
+- Utilizzare gli strumenti di sviluppo nel cloud
 
-```
-┌─────────────────┐
-│  Client Browser │
-└────────┬────────┘
-         │ HTTP :80
-┌────────▼────────┐
-│  Apache + PHP   │
-│   (Port 80)     │
-└────────┬────────┘
-         │
-┌────────▼────────┐
-│     MariaDB     │
-│   (Port 3306)   │
-└─────────────────┘
-```
+## Competenze
 
-**Componenti:**
-- **Apache + PHP 8.2**: Web server per applicazioni PHP
-- **MariaDB**: Database relazionale MySQL-compatible
+✅ Creare e gestire repository GitHub  
+✅ Scrivere file `devcontainer.json` e `docker-compose.yml`  
+✅ Comprendere il ruolo di Apache, PHP, MySQL in uno stack LAMP  
+✅ Usare volumi Docker per la persistenza e lo sviluppo live  
+✅ Esporre e inoltrare porte in Codespaces  
+✅ Debug di container tramite log e comandi interattivi
+
+## Durata stimata
+
+**45-60 minuti** (configurazione iniziale) + tempo per personalizzazioni
+
+## Prerequisiti teorici
+
+### Cos'è lo stack LAMP?
+LAMP è un acronimo che indica un insieme di tecnologie open source per eseguire applicazioni web dinamiche:
+- **L**inux (sistema operativo)
+- **A**pache (web server)
+- **M**ySQL (database relazionale)
+- **P**HP (linguaggio di scripting lato server)
+
+Ogni componente è sostituibile (es. MariaDB al posto di MySQL, PostgreSQL, Nginx, Python/Perl) ma LAMP rimane lo stack più classico per lo sviluppo web.
+
+### Perché Docker e Docker Compose?
+- **Docker** containerizza ogni servizio, isolandoli ma facendoli comunicare via rete.
+- **Docker Compose** permette di definire e avviare multi-container con un unico file YAML, specificando dipendenze, volumi, reti, variabili d'ambiente.
+- Vantaggi: ambiente identico su qualsiasi macchina (locale, cloud, Codespaces), eliminazione del "funziona sul mio PC", facile condivisione con il team.
+
+### GitHub Codespaces
+Ambiente di sviluppo cloud basato su container. Un file `.devcontainer/devcontainer.json` dice a Codespaces come configurare l'ambiente (quali container avviare, quali estensioni VSCode installare, porte da esporre). Codespaces costruisce e avvia automaticamente i container definiti in `docker-compose.yml`.
 
 ---
 
-## Parte 1: Setup Repository e Dev Container
+## Parte 1: Setup del Repository GitHub
 
-### Step 1.1: Crea Repository GitHub
+### Step 1.1: Creare un nuovo repository pubblico
 
-1. GitHub → **New repository**
-2. Nome: `lamp-stack`
-3. Description: "LAMP development environment"
-4. Public ✅
-5. Initialize with README ✅
-6. Create repository
+1. Accedi a [GitHub](https://github.com)
+2. Clicca su **New repository** (pulsante verde)
+3. Compila:
+   - **Repository name:** `lamp-codespaces-lab`
+   - **Description:** "Ambiente LAMP con Docker Compose per Codespaces"
+   - **Public** ✅
+   - **Initialize this repository with a README** ✅
+4. Clicca **Create repository**
 
-### Step 1.2: Crea Struttura Cartelle
+### Step 1.2: Clonare localmente (opzionale) o usare l'editor web
 
-Crea file `STRUCTURE.md` per visualizzare la struttura:
+Per modifiche rapide, puoi usare l'editor web di GitHub premendo il tasto `.` (punto) sulla tastiera mentre sei sul repository.  
+In alternativa, clona in locale:
+
+```bash
+git clone https://github.com/TUO_USERNAME/lamp-codespaces-lab.git
+cd lamp-codespaces-lab
+```
+
+---
+
+## Parte 2: Configurare il Dev Container e Docker Compose
+
+### Step 2.1: Creare la struttura delle cartelle
+
+Crea le seguenti directory e file all'interno del repository:
 
 ```
-lamp-stack/
+lamp-codespaces-lab/
 ├── .devcontainer/
-│   └── devcontainer.json
-├── docker-compose.yml
-├── apache/
-│   └── sites-available/
-│       └── 000-default.conf
-├── www/
+│   ├── devcontainer.json
+│   └── docker-compose.yml
+├── web/
 │   └── index.php
-├── mysql/
-│   └── init.sql
-├── .env.example
-├── .env
 └── README.md
 ```
 
-### Step 1.3: Crea `.devcontainer/devcontainer.json`
+### Step 2.2: Dev Container
+
+Il file `.devcontainer/devcontainer.json` istruisce GitHub Codespaces su come costruire l'ambiente. Le proprietà principali:
+
+- `"name"`: nome visualizzato in Codespaces
+- `"dockerComposeFile"`: percorso del file docker-compose.yml da usare
+- `"service"`: quale servizio del compose sarà il **workspace** (quello a cui si attacca VS Code)
+- `"workspaceFolder"`: percorso dentro il container che verrà aperto come root del progetto
+- `"remoteUser"`: utente con cui eseguire i comandi (qui `root` per evitare permessi)
+- `"forwardPorts"`: porte che Codespaces deve automaticamente inoltrare al browser
+- `"customizations.vscode.extensions"`: estensioni VS Code preinstallate
+
+### Step 2.3: Creare `.devcontainer/devcontainer.json`
 
 ```json
 {
-  "name": "LAMP Stack Dev",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
-  
-  "features": {
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
-  },
-  
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "felixfbecker.php-debug",
-        "bmewburn.vscode-intelephense-client",
-        "ms-azuretools.vscode-docker"
-      ]
-    }
-  },
-  
-  "forwardPorts": [80, 3306],
-  
-  "postCreateCommand": "docker-compose up -d && echo '✅ LAMP stack started!'"
-}
-```
-  },
-  
-  "forwardPorts": [80, 3306],
-  "portsAttributes": {
-    "80": {
-      "label": "Apache PHP"
+    "name": "LAMP Stack",
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "web",
+    "workspaceFolder": "/workspace",
+    "shutdownAction": "stopCompose",
+    "remoteUser": "root",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "bmewburn.vscode-intelephense-client",
+                "xdebug.php-debug"
+            ]
+        }
     },
-    "3306": {
-      "label": "MariaDB"
-    }
-  "forwardPorts": [80, 3306],
-  
-  "postCreateCommand": "docker-compose up -d && echo '✅ LAMP stack started!'"
+    "forwardPorts": [80, 8080]
 }
 ```
 
-> **📝 Nota**: Questo dev container usa Docker-in-Docker per gestire i container LAMP dall'esterno, non entrando nel container webserver. Questo permette di usare `docker-compose` e `docker` normalmente.
+**Note importanti:**
+- `workspaceFolder` è impostato su `/workspace` perché questa cartella esiste sempre nei container di Codespaces (è il punto di mount del repository). In questo modo evitiamo l'errore "workspace does not exist".
+- Il servizio `web` sarà il container principale a cui si attacca VS Code.
+- Le porte 80 (Apache) e 8080 (phpMyAdmin) saranno automaticamente accessibili tramite URL generati da Codespaces.
 
----
+### Step 2.4: Docker Compose
 
-## Parte 2: Configurazione Docker Compose
+Il file `docker-compose.yml` definisce tre servizi:
 
-### Step 2.1: Crea `.env.example`
+1. **web** – container Apache+PHP. Usiamo l'immagine ufficiale `php:8.2-apache` e al momento dell'avvio eseguiamo comandi per installare le estensioni MySQL e abilitare mod_rewrite. Montiamo la cartella locale `./web` nella directory `/var/www/html` di Apache, così possiamo modificare i file PHP dal nostro editor e vederli immediatamente riflessi.
+2. **db** – container MySQL 8.0. Impostiamo variabili d'ambiente per root password, database di default, utente e password. Un volume `db-data` garantisce che i dati persistano anche se il container viene ricreato.
+3. **phpmyadmin** – interfaccia web per gestire MySQL. Collegato al servizio `db` tramite variabile `PMA_HOST`.
 
-```bash
-# Database Configuration
-MYSQL_ROOT_PASSWORD=rootpassword123
-DB_USERNAME=lamp_user
-DB_PASSWORD=lamp_password
-DB_DATABASE=lamp_db
-DB_HOST=mariadb
+Le **reti** (`lamp-network`) permettono ai container di comunicare tra loro usando i nomi dei servizi come hostname (es. `db` è raggiungibile dal container `web`).
 
-# Webserver Admin Credentials
-WEBSERVER_ADMIN_USERNAME=admin
-WEBSERVER_ADMIN_PASSWORD=admin123
-```
-
-**Importante**: Copia `.env.example` → `.env` (git-ignored)
-
-```bash
-cp .env.example .env
-```
-
-### Step 2.2: Crea `docker-compose.yml`
+### Step 2.5: Creare `.devcontainer/docker-compose.yml`
 
 ```yaml
-version: "3.8"
-
-networks:
-  lamp_network:
-    driver: bridge
+version: '3.8'
 
 services:
-  # Apache + PHP Web Server
-  webserver:
-    image: php:8.2-apache-bullseye
-    container_name: lamp_webserver
-    restart: unless-stopped
+  web:
+    image: php:8.2-apache
     ports:
       - "80:80"
-    depends_on:
-      - mariadb
-    environment:
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_HOST=mariadb
-      - DB_DATABASE=${DB_DATABASE}
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
     volumes:
-      - ./www:/var/www/html
-      - ./apache/sites-available/000-default.conf:/etc/apache2/sites-available/000-default.conf
+      - .:/workspace               # monta l'intero repo in /workspace per l'editor
+      - ./web:/var/www/html        # monta la cartella web nella DocumentRoot di Apache
     command: >
-      bash -c "
-      apt-get update &&
-      apt-get install -y curl &&
-      docker-php-ext-install mysqli pdo pdo_mysql &&
-      a2enmod rewrite &&
-      apache2-foreground
-      "
+      bash -c "docker-php-ext-install mysqli pdo pdo_mysql &&
+               a2enmod rewrite &&
+               apache2-foreground"
+    depends_on:
+      - db
     networks:
-      - lamp_network
+      - lamp-network
 
-  # MariaDB Database
-  mariadb:
-    image: mariadb:11.2
-    container_name: lamp_mariadb
-    restart: unless-stopped
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: lamp_db
+      MYSQL_USER: lamp_user
+      MYSQL_PASSWORD: lamp_password
     ports:
       - "3306:3306"
-    environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_USER=${DB_USERNAME}
-      - MYSQL_PASSWORD=${DB_PASSWORD}
-      - MYSQL_DATABASE=${DB_DATABASE}
-    command: 
-      - --max-allowed-packet=128M
-      - --innodb-log-file-size=64M
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     volumes:
-      - mariadb_data:/var/lib/mysql
-      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - db-data:/var/lib/mysql
     networks:
-      - lamp_network
+      - lamp-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+    depends_on:
+      - db
+    networks:
+      - lamp-network
 
 volumes:
-  mariadb_data:
-    driver: local
+  db-data:
+
+networks:
+  lamp-network:
 ```
+
+**Spiegazione comando `web`:**  
+- `docker-php-ext-install` è uno script incluso nell'immagine ufficiale PHP che compila e abilita estensioni.
+- `a2enmod rewrite` abilita il modulo mod_rewrite di Apache (utile per URL puliti).
+- `apache2-foreground` avvia Apache in primo piano (il processo principale del container).
+
+**Volumi:**
+- Il primo volume `.:/workspace` è necessario affinché VS Code (che cerca `/workspace`) possa vedere i file del repository.
+- Il secondo volume `./web:/var/www/html` sovrascrive la DocumentRoot di Apache con i nostri file PHP.
 
 ---
 
-## Parte 3: Applicazioni di Esempio
+## Parte 3: Creare l'Applicazione PHP di Test
 
-### Step 3.1: PHP App - `www/index.php`
+### Step 3.1: Connessione PHP a MySQL
+
+All'interno del container `web`, PHP può connettersi al database usando l'hostname `db` (grazie alla rete Docker personalizzata). Utilizzeremo **PDO** (PHP Data Objects) per l'accesso al database, che è più sicuro e portabile rispetto alle funzioni mysql_*.
+
+### Step 3.2: Creare `web/index.php`
 
 ```php
-<?php
-// Database connection
-$host = getenv('DB_HOST') ?: 'mariadb';
-$dbname = getenv('DB_DATABASE') ?: 'lamp_db';
-$username = getenv('DB_USERNAME') ?: 'lamp_user';
-$password = getenv('DB_PASSWORD') ?: 'lamp_password';
-
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $db_status = "✅ Connected to MariaDB";
-    
-    // Create table if not exists
-    $pdo->exec("
-        CREATE TABLE IF NOT EXISTS users (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(100),
-            email VARCHAR(100),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ");
-    
-    // Insert sample data
-    $stmt = $pdo->query("SELECT COUNT(*) FROM users");
-    if ($stmt->fetchColumn() == 0) {
-        $pdo->exec("
-            INSERT INTO users (name, email) VALUES 
-            ('Alice', 'alice@example.com'),
-            ('Bob', 'bob@example.com')
-        ");
-    }
-    
-    // Fetch users
-    $users = $pdo->query("SELECT * FROM users")->fetchAll(PDO::FETCH_ASSOC);
-    
-} catch(PDOException $e) {
-    $db_status = "❌ Connection failed: " . $e->getMessage();
-    $users = [];
-}
-?>
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
-    <title>PHP Application</title>
+    <meta charset="UTF-8">
+    <title>LAMP Stack su Codespaces</title>
     <style>
-        body { font-family: Arial; padding: 40px; background: #f9f9f9; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { color: #4A5568; }
-        .status { padding: 15px; margin: 20px 0; border-radius: 5px; background: #E6FFFA; border-left: 4px solid #38B2AC; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background: #4299E1; color: white; }
-        tr:hover { background: #f5f5f5; }
-        .info { background: #EBF8FF; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f4f4f4; }
+        .container { background: white; padding: 20px; border-radius: 8px; max-width: 800px; margin: auto; }
+        h1 { color: #333; }
+        .success { color: green; }
+        .error { color: red; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🐘 PHP Application</h1>
+<div class="container">
+    <h1>✅ Ambiente LAMP funzionante!</h1>
+    <p>Apache + PHP + MySQL in esecuzione su GitHub Codespaces con Docker Compose.</p>
+    
+    <h2>Info PHP</h2>
+    <p>Versione PHP: <strong><?php echo phpversion(); ?></strong></p>
+    
+    <h2>Test connessione MySQL</h2>
+    <?php
+    $host = 'db';
+    $dbname = 'lamp_db';
+    $user = 'lamp_user';
+    $pass = 'lamp_password';
+    
+    try {
+        $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $user, $pass);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         
-        <div class="info">
-            <strong>PHP Version:</strong> <?php echo phpversion(); ?><br>
-            <strong>Server:</strong> <?php echo $_SERVER['SERVER_SOFTWARE']; ?>
-        </div>
+        // Crea una tabella di esempio se non esiste
+        $pdo->exec("CREATE TABLE IF NOT EXISTS test_table (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            messaggio VARCHAR(255) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )");
         
-        <div class="status">
-            <strong>Database Status:</strong> <?php echo $db_status; ?>
-        </div>
+        // Inserisci un record di esempio solo se la tabella è vuota
+        $stmt = $pdo->query("SELECT COUNT(*) FROM test_table");
+        $count = $stmt->fetchColumn();
+        if ($count == 0) {
+            $pdo->exec("INSERT INTO test_table (messaggio) VALUES ('Connessione al database riuscita!')");
+        }
         
-        <h2>👥 Users from Database</h2>
-        <?php if (!empty($users)): ?>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Created At</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach($users as $user): ?>
-                <tr>
-                    <td><?php echo $user['id']; ?></td>
-                    <td><?php echo htmlspecialchars($user['name']); ?></td>
-                    <td><?php echo htmlspecialchars($user['email']); ?></td>
-                    <td><?php echo $user['created_at']; ?></td>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-        <?php else: ?>
-        <p>No users found.</p>
-        <?php endif; ?>
+        // Leggi e mostra i record
+        $stmt = $pdo->query("SELECT id, messaggio, created_at FROM test_table ORDER BY id DESC");
+        echo "<p class='success'>✅ Connessione a MySQL riuscita!</p>";
+        echo "<h3>Record nella tabella 'test_table':</h3>";
+        echo "<table><tr><th>ID</th><th>Messaggio</th><th>Data creazione</th></tr>";
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            echo "<tr><td>{$row['id']}</td><td>{$row['messaggio']}</td><td>{$row['created_at']}</td></tr>";
+        }
+        echo "</table>";
         
-        <div style="margin-top: 30px;">
-            <p style="color: #718096;">LAMP Stack: Linux + Apache + MySQL + PHP</p>
-        </div>
-    </div>
+    } catch (PDOException $e) {
+        echo "<p class='error'>❌ Errore di connessione: " . $e->getMessage() . "</p>";
+    }
+    ?>
+    
+    <h2>Informazioni di sistema</h2>
+    <ul>
+        <li><strong>Apache:</strong> <?php echo $_SERVER['SERVER_SOFTWARE']; ?></li>
+        <li><strong>Indirizzo IP server:</strong> <?php echo $_SERVER['SERVER_ADDR']; ?></li>
+        <li><strong>Document Root:</strong> <?php echo $_SERVER['DOCUMENT_ROOT']; ?></li>
+    </ul>
+    
+    <p>🔧 phpMyAdmin disponibile sulla porta <strong>8080</strong> (utente: <code>lamp_user</code>, password: <code>lamp_password</code>)</p>
+</div>
 </body>
 </html>
 ```
 
-### Step 3.2: Database Init - `mysql/init.sql`
+**Spiegazione del codice PHP:**
+- `new PDO(...)` crea una connessione al database MySQL usando l'host `db`.
+- La tabella `test_table` viene creata se non esiste.
+- Viene inserito un messaggio di esempio solo la prima volta.
+- I risultati vengono mostrati in una tabella HTML.
 
+---
+
+## Parte 4: Avviare e Testare in GitHub Codespaces
+
+### Step 4.1: Creare un nuovo Codespace
+
+1. Vai sul repository GitHub.
+2. Clicca sul pulsante verde **Code**.
+3. Seleziona il tab **Codespaces**.
+4. Clicca su **Create codespace on main**.
+
+**Cosa succede in background?**  
+GitHub legge il file `.devcontainer/devcontainer.json`, esegue `docker-compose up -d` con il file specificato, costruisce i container (se non esistono), monta i volumi, avvia i servizi e infine attacca VS Code al container `web` nella cartella `/workspace`.
+
+### Step 4.2: Verificare che tutto sia attivo
+
+Dopo circa 1-2 minuti, VS Code si apre nel browser. Apri il terminale integrato (`Ctrl+` ` o `Cmd+``) ed esegui:
+
+```bash
+docker ps
+
+mysql -h db -u root -prootpassword --ssl=0
+```
+
+Dovresti vedere tre container in esecuzione: `web`, `db`, `phpmyadmin`.
+
+### Step 4.3: Testare l'applicazione web
+
+- Nella sezione **Porte** di VS Code (in basso), vedrai la porta **80** (Apache) e **8080** (phpMyAdmin).  
+- Clicca sull'icona a forma di 🌍 accanto alla porta 80 per aprire l'applicazione nel browser.
+
+Vedrai la pagina PHP che conferma la connessione al database e mostra il record inserito.
+
+### Step 4.4: Testare phpMyAdmin
+
+Clicca sull'icona 🌍 della porta 8080. Si aprirà phpMyAdmin. Login con:
+- **Utente:** `lamp_user`
+- **Password:** `lamp_password`
+
+Oppure come root: `root` / `rootpassword`. Potrai esplorare il database `lamp_db` e la tabella `test_table`.
+
+### Step 4.5: Testare MySQL da terminale
+
+```bash
+docker exec -it lamp-codespaces-lab-db-1 mysql -u lamp_user -p
+# Password: lamp_password
+```
+
+Poi esegui:
 ```sql
--- Initial database setup
-CREATE DATABASE IF NOT EXISTS lamp_db;
-USE lamp_db;
-
--- Users table
-CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Products table
-CREATE TABLE IF NOT EXISTS products (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    price DECIMAL(10,2) NOT NULL,
-    category VARCHAR(50),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Insert sample data
-INSERT IGNORE INTO users (name, email) VALUES
-    ('Alice Smith', 'alice@example.com'),
-    ('Bob Johnson', 'bob@example.com'),
-    ('Charlie Brown', 'charlie@example.com');
-
-INSERT IGNORE INTO products (name, price, category) VALUES
-    ('Laptop', 999.99, 'Electronics'),
-    ('Mouse', 29.99, 'Electronics'),
-    ('Keyboard', 79.99, 'Electronics'),
-    ('Desk', 299.99, 'Furniture');
-
--- Create indexes
-CREATE INDEX idx_email ON users(email);
-CREATE INDEX idx_category ON products(category);
-```
-
----
-
-## Parte 4: Apache Configuration
-
-### Step 4.1: `apache/sites-available/000-default.conf`
-
-```apache
-<VirtualHost *:80>
-    ServerAdmin webmaster@localhost
-    DocumentRoot /var/www/html
-
-    <Directory /var/www/html>
-        Options Indexes FollowSymLinks
-        AllowOverride All
-        Require all granted
-    </Directory>
-
-    # Logging
-    ErrorLog ${APACHE_LOG_DIR}/error.log
-    CustomLog ${APACHE_LOG_DIR}/access.log combined
-
-    # PHP Settings
-    <FilesMatch \.php$>
-        SetHandler application/x-httpd-php
-    </FilesMatch>
-</VirtualHost>
-```
-
----
-
-## Parte 5: Creazione Codespace e Testing
-
-### Step 5.1: Crea Codespace
-
-1. Vai sul tuo repository GitHub
-2. Click su **Code** (verde)
-3. Tab **Codespaces**
-4. Click **Create codespace on main**
-5. Attendi 2-3 minuti → VS Code si apre nel browser!
-
-Il dev container:
-- Legge `docker-compose.yml`
-- Avvia i servizi (Apache + MariaDB)
-- Monta i volumi
-- Forward delle porte
-
-### Step 5.2: Verifica Container Attivi
-
-Nel terminal Codespace:
-
-```bash
-# Controlla i container
-docker-compose ps
-
-# Output atteso:
-# NAME              IMAGE                           STATUS
-# lamp_webserver    php:8.2.5-apache-bullseye      Up
-# lamp_mariadb      mariadb                         Up
-
-# Logs in tempo reale
-docker-compose logs -f
-
-# Stop logs: Ctrl+C
-```
-
-**Attendi startup**:
-- MariaDB: ~10-15s
-- Apache: ~20-30s (installa extensions PHP)
-
-### Step 5.3: Crea Database di Esempio
-
-```bash
-# Entra nel container MariaDB
-docker exec -it lamp_mariadb mysql -u lamp_user -plamp_password lamp_db
-
-# Verifica che il database esista
 SHOW DATABASES;
-
-# Verifica tabelle create da init.sql
+USE lamp_db;
 SHOW TABLES;
-
-# Verifica dati nelle tabelle
-SELECT * FROM users;
-SELECT * FROM products;
-
-# Esci
-exit;
-```
-
-**Output atteso**:
-```
-mysql> SELECT * FROM users;
-+----+-----------+-----------------------+
-| id | name      | email                 |
-+----+-----------+-----------------------+
-|  1 | John Doe  | john@example.com      |
-|  2 | Jane Smith| jane@example.com      |
-+----+-----------+-----------------------+
-
-mysql> SELECT * FROM products;
-+----+-----------+--------+
-| id | name      | price  |
-+----+-----------+--------+
-|  1 | Laptop    | 999.99 |
-|  2 | Mouse     |  29.99 |
-+----+-----------+--------+
-```
-
-### Step 5.4: Verifica Sito Web
-
-**Metodo 1: curl (dal terminal)**
-
-```bash
-# Test homepage
-curl http://localhost
-
-# Output atteso: HTML con titolo "LAMP Stack - Home"
-```
-
-**Metodo 2: Browser (Codespaces)**
-
-1. Guarda le notifiche in basso a destra: **"Porta 80 disponibile"**
-2. Click su **"Open in Browser"** o sull'icona 🌐
-3. URL formato: `https://<codespace>-80.preview.app.github.dev`
-
-**Cosa dovresti vedere**:
-- Homepage con titolo "LAMP Stack - Home"
-- Lista utenti dal database
-- Lista prodotti dal database
-- Informazioni PHP (versione, estensioni)
-
-### Step 5.5: Test Connessione Database dalla Web App
-
-Nel browser, vai su:
-```
-https://<codespace>-80.preview.app.github.dev/db-test.php
-```
-
-Crea il file di test:
-
-```bash
-cat > www/db-test.php << 'EOF'
-<?php
-$host = getenv('DB_HOST');
-$user = getenv('DB_USERNAME');
-$pass = getenv('DB_PASSWORD');
-$db = getenv('DB_DATABASE');
-
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$db", $user, $pass);
-    echo "<h1>✅ Connessione Database OK!</h1>";
-    
-    // Query users
-    $stmt = $pdo->query("SELECT * FROM users");
-    $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    echo "<h2>Utenti:</h2><ul>";
-    foreach($users as $user) {
-        echo "<li>{$user['name']} - {$user['email']}</li>";
-    }
-    echo "</ul>";
-    
-} catch(PDOException $e) {
-    echo "<h1>❌ Errore: " . $e->getMessage() . "</h1>";
-}
-?>
-EOF
-```
-
-Refresh browser → Dovresti vedere la lista utenti!
-
----
-
-## Parte 6: Development Workflow
-
-### Modifica Codice PHP
-
-```bash
-# Modifica index.php (dal workspace root)
-code www/index.php
-
-# I file sono montati come volume in docker-compose.yml
-# Le modifiche sono visibili IMMEDIATAMENTE nel container
-# → Refresh browser per vedere cambiamenti
-```
-
-> **💡 Tip**: Non devi entrare nel container per modificare i file! Lavora direttamente dalla cartella `www/` nel tuo workspace Codespaces. I volumi Docker sincronizzano automaticamente.
-
-### Aggiungi Nuova Pagina PHP
-
-```bash
-# Crea nuova cartella
-mkdir -p www/blog
-
-# Crea index.php
-cat > www/blog/index.php << 'EOF'
-<?php
-echo "<h1>My Blog</h1>";
-echo "PHP Version: " . phpversion();
-?>
-EOF
-
-# Accessibile su: http://localhost/blog/
-```
-
-### Aggiungi Script PHP (CRUD Example)
-
-```bash
-# Crea API PHP per gestione prodotti
-cat > www/api.php << 'EOF'
-<?php
-header('Content-Type: application/json');
-
-$host = getenv('DB_HOST') ?: 'mariadb';
-$dbname = getenv('DB_DATABASE') ?: 'lamp_db';
-$username = getenv('DB_USERNAME') ?: 'lamp_user';
-$password = getenv('DB_PASSWORD') ?: 'lamp_password';
-
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    
-    // GET all products
-    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-        $stmt = $pdo->query("SELECT * FROM products");
-        $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        echo json_encode($products);
-    }
-    
-} catch(PDOException $e) {
-    http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
-}
-?>
-EOF
-
-# Test: curl http://localhost/api.php
+SELECT * FROM test_table;
+EXIT;
 ```
 
 ---
 
-## Parte 7: Troubleshooting
+## Parte 5: Comandi Utili per la Gestione
 
-### ❌ `docker-compose: command not found`
-
-**Causa**: Stai usando il vecchio devcontainer.json che entra nel service webserver (che non ha Docker).
-
-**Soluzione**: Aggiorna `.devcontainer/devcontainer.json` con la configurazione corretta:
-
-```json
-{
-  "name": "LAMP Stack Dev",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
-  
-  "features": {
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
-  },
-  
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "felixfbecker.php-debug",
-        "bmewburn.vscode-intelephense-client",
-        "ms-azuretools.vscode-docker"
-      ]
-    }
-  },
-  
-  "forwardPorts": [80, 3306],
-  
-  "postCreateCommand": "docker-compose up -d && echo '✅ LAMP stack started!'"
-}
-```
-
-Poi **Rebuild Container**: `Cmd/Ctrl + Shift + P` → "Codespaces: Rebuild Container"
-
-### Container non si avvia
+### Riavviare i servizi
 
 ```bash
-# Controlla logs
-docker-compose logs webserver
-docker-compose logs mariadb
+# Riavvio solo del web server
+docker-compose -f .devcontainer/docker-compose.yml restart web
 
-# Riavvia servizi
-docker-compose restart
+# Riavvio di tutti i servizi
+docker-compose -f .devcontainer/docker-compose.yml restart
 ```
 
-### Database connection failed
+### Visualizzare i log in tempo reale
 
 ```bash
-# Verifica credenziali
-cat .env
-
-# Test connessione manuale
-docker exec -it lamp_mariadb mysql -u root -prootpassword123
-
-# Reset database
-docker-compose down -v  # ATTENZIONE: cancella dati!
-docker-compose up -d
+docker-compose -f .devcontainer/docker-compose.yml logs -f
 ```
 
-### Apache non risponde
+Per vedere solo i log di Apache:
+```bash
+docker-compose -f .devcontainer/docker-compose.yml logs web
+```
+
+### Entrare in una shell interattiva nel container web
 
 ```bash
-# Verifica container attivo
-docker-compose ps
+docker exec -it lamp-codespaces-lab-web-1 bash
+# Ora sei dentro il container; puoi fare ls /var/www/html, tail -f /var/log/apache2/error.log, etc.
+```
 
-# Check logs Apache
-docker-compose logs webserver
+### Fermare e avviare i container
 
-# Entra nel container per debug
-docker exec -it lamp_webserver bash
-curl http://localhost
+```bash
+docker-compose -f .devcontainer/docker-compose.yml stop
+docker-compose -f .devcontainer/docker-compose.yml start
+```
+
+### Ricostruire le immagini dopo modifiche al Dockerfile (anche se qui non abbiamo Dockerfile personalizzato, se lo aggiungerai)
+
+```bash
+docker-compose -f .devcontainer/docker-compose.yml build --no-cache
+docker-compose -f .devcontainer/docker-compose.yml up -d
 ```
 
 ---
 
-## ✅ Checklist Completamento
+## Parte 6: Approfondimenti Teorici Avanzati
 
-- [ ] Repository GitHub creato
-- [ ] `.devcontainer/devcontainer.json` configurato
-- [ ] `docker-compose.yml` completo
-- [ ] File `.env` creato (da `.env.example`)
-- [ ] Apache configurato
-- [ ] App PHP funzionante
-- [ ] Database MariaDB operativo
-- [ ] Test connessione database superato
-- [ ] Accesso da browser Codespaces OK
+### 6.1 Volumi Docker: tipi e utilizzo
 
----
+Nel nostro `docker-compose.yml` usiamo due tipi di volumi:
+- **Bind mount** (`./web:/var/www/html`): collega una directory del sistema host (il repository) a una directory del container. Le modifiche sono visibili su entrambi i lati. È ideale per lo sviluppo.
+- **Volume nominato** (`db-data`): gestito interamente da Docker, persistente e isolato. Perfetto per i dati del database.
 
-## 📸 Consegna
+### 6.2 Variabili d'ambiente per MySQL
 
-1. **Repository GitHub** con tutti i file
-2. **Screenshot Codespaces** con tutti i container attivi (`docker-compose ps`)
-3. **Screenshot Browser**:
-   - Apache home page
-   - PHP app con lista utenti
-4. **File RELAZIONE.md** con:
-   - Architettura spiegata
-   - Scelte tecniche
-   - Problemi risolti
-   - Screenshot
+Le variabili `MYSQL_ROOT_PASSWORD`, `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD` sono utilizzate dall'immagine ufficiale MySQL per inizializzare il database al primo avvio. Se il volume `db-data` esiste già, queste variabili vengono ignorate (i dati sono già presenti). Questo garantisce che ricreando il container senza cancellare il volume, i dati restano intatti.
+
+### 6.3 Reti Docker personalizzate
+
+Creando una rete dedicata (`lamp-network`), i container possono risolvere i nomi dei servizi come hostname. Ad esempio, dal container `web` possiamo usare `db` come indirizzo per connetterci a MySQL, senza bisogno di conoscere l'IP. Inoltre, i container sulla stessa rete possono comunicare tra loro, ma non con container esterni a meno che non si espongano le porte.
+
+### 6.4 Differenza tra `CMD`, `RUN` e `command` in Docker
+
+- `RUN` viene eseguito durante la build dell'immagine.
+- `CMD` definisce il comando di default quando il container parte.
+- Nel nostro `docker-compose.yml` usiamo `command:` per sovrascrivere il comando di default dell'immagine `php:apache`. In questo modo possiamo eseguire comandi di setup (installazione estensioni, abilitazione moduli) prima di avviare Apache.
 
 ---
 
-## 🎯 Bonus
+## Parte 7: Personalizzazione e Estensioni
 
-- [ ] Aggiungere phpMyAdmin per gestione DB visuale
-- [ ] Implementare autenticazione con sessioni PHP
-- [ ] Aggiungere Redis per caching
-- [ ] SSL/TLS con certificati auto-firmati
-- [ ] Monitoring con Prometheus + Grafana
-- [ ] CI/CD con GitHub Actions
+### Aggiungere un nuovo file PHP
+
+Crea `web/info.php` con:
+```php
+<?php phpinfo(); ?>
+```
+Accedi a `http://localhost:80/info.php` per vedere la configurazione completa di PHP.
+
+### Modificare la configurazione di Apache
+
+Puoi aggiungere un file di configurazione personalizzato montandolo come volume. Ad esempio, crea `web/.htaccess` o aggiungi nel `docker-compose.yml`:
+
+```yaml
+volumes:
+  - ./apache-config.conf:/etc/apache2/sites-available/000-default.conf
+```
+
+### Installare estensioni PHP aggiuntive
+
+Modifica il `command` nel servizio `web` per includere altre estensioni, ad esempio:
+```yaml
+command: >
+  bash -c "docker-php-ext-install mysqli pdo pdo_mysql gd zip &&
+           a2enmod rewrite &&
+           apache2-foreground"
+```
 
 ---
 
-## 🚀 Prossimi Passi
+## Verifica Finale delle Competenze
 
-Dopo aver completato questo esercizio, sarai in grado di:
-- Creare stack multi-servizio con docker-compose
-- Configurare networking tra container Docker
-- Integrare PHP con database per applicazioni web
-- Deployare su ambiente cloud (AWS, Azure, GCP)
-- Scalare orizzontalmente con Kubernetes
+- [ ] Repository GitHub creato con la struttura corretta
+- [ ] File `.devcontainer/devcontainer.json` e `docker-compose.yml` presenti
+- [ ] Container `web`, `db`, `phpmyadmin` in esecuzione
+- [ ] Pagina `index.php` accessibile e mostra la connessione a MySQL riuscita
+- [ ] phpMyAdmin accessibile e permette di navigare nel database
+- [ ] È possibile eseguire comandi SQL da terminale
+- [ ] Modificando `index.php`, la pagina si aggiorna senza riavviare i container
 
-**Complimenti!** Hai creato un ambiente di sviluppo LAMP completo! 🎉
+## Screenshot da Includere nella Consegna
+
+1. **Repository su GitHub** con l'elenco dei file (struttura ad albero)
+2. **Codespaces aperto** con VS Code nel browser
+3. **Browser con la pagina `index.php`** (mostrare il messaggio di successo e la tabella)
+4. **Browser con phpMyAdmin** (mostrare il database `lamp_db` e la tabella)
+5. **Terminale** con il comando `docker ps` che mostra i tre container attivi
+
+## Troubleshooting Avanzato
+
+### Problema: La porta 80 non si apre automaticamente
+**Soluzione:** Nella vista "Porte" di VS Code, clicca su "Aggiungi porta" e inserisci 80. Poi fai clic sull'icona del mondo.
+
+### Problema: "Connection refused" da PHP a MySQL
+**Causa:** MySQL potrebbe non essere ancora pronto quando PHP prova a connettersi.  
+**Soluzione:** Aggiungi nel codice PHP un ritardo o usa uno script di attesa. Per semplicità, ricarica la pagina dopo qualche secondo.
+
+### Problema: Modifiche ai file PHP non si vedono nel browser
+**Causa:** Potrebbe essere la cache del browser o il volume non montato correttamente.  
+**Soluzione:** Controlla che il file sia stato salvato e che il volume `./web:/var/www/html` sia attivo (`docker inspect lamp-codespaces-lab-web-1`).
+
+### Problema: Codespaces si blocca in "Starting"
+**Soluzione:** Cancella il Codespace e ricrealo. A volte GitHub ha rallentamenti. Se persiste, verifica che il file `docker-compose.yml` sia valido (indentazione YAML corretta).
+
+## Riferimenti e Risorse
+
+- [Documentazione ufficiale Docker Compose](https://docs.docker.com/compose/)
+- [Immagine Docker ufficiale PHP](https://hub.docker.com/_/php)
+- [Immagine Docker ufficiale MySQL](https://hub.docker.com/_/mysql)
+- [Guida di GitHub Codespaces](https://docs.github.com/en/codespaces)
+- [PHP PDO Tutorial](https://www.php.net/manual/en/book.pdo.php)
+
+## Conclusione
+
+Hai realizzato un ambiente di sviluppo LAMP completo e riproducibile, sfruttando le tecnologie container e il cloud. Questo setup può essere utilizzato per qualsiasi progetto PHP/MySQL, condiviso con il team e persino portato in produzione con piccoli adattamenti. Ora puoi sviluppare applicazioni web complesse senza preoccuparti dell'ambiente locale. Buon coding!
