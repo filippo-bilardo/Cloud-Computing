@@ -66,7 +66,9 @@ Per questa esercitazione dovrai produrre un **documento Google** contenente:
 - **Workstation Player:** gratuito per uso personale e accademico, funzionalità base
 - **Trial Pro:** 30 giorni gratuiti con funzionalità complete
 
-### 1.3 Installazione VMware Workstation 16
+### 1.3 Installazione VMware Workstation 16 ⚙️ *(richiede privilegi di amministratore)*
+
+> ⚠️ **Nota:** Questa sezione richiede i **diritti di amministratore** sulla macchina host. Se si lavora su un PC scolastico o aziendale senza tali diritti, saltare questa parte — VMware potrebbe essere già installato dal tecnico di sistema.
 
 #### Su Windows:
 ```cmd
@@ -124,7 +126,9 @@ vmware --version
 
 ---
 
-## Parte 2: Abilitazione Virtualizzazione nel BIOS
+## Parte 2: Abilitazione Virtualizzazione nel BIOS ⚙️ *(richiede accesso fisico e privilegi di amministratore)*
+
+> ⚠️ **Nota:** Accedere al BIOS/UEFI e modificare le impostazioni di virtualizzazione richiede **accesso fisico alla macchina** e, in ambienti scolastici/aziendali, potrebbe essere bloccato dalla policy IT. Se la virtualizzazione è già abilitata (verificalo con la sezione 2.1), puoi saltare le sezioni 2.2 e 2.3.
 
 ### 2.1 Verifica Supporto Virtualizzazione
 
@@ -151,7 +155,7 @@ lscpu | grep Virtualization
 lsmod | grep kvm
 ```
 
-### 2.2 Accesso al BIOS/UEFI
+### 2.2 Accesso al BIOS/UEFI *(opzionale — solo se la virtualizzazione risulta disabilitata)*
 
 **Tasti comuni per entrare nel BIOS:**
 - Dell: F2 o F12
@@ -175,7 +179,7 @@ lsmod | grep kvm
 6. Salva (solitamente F10) e riavvia
 ```
 
-### 2.3 VMware e Hyper-V su Windows
+### 2.3 VMware e Hyper-V su Windows *(opzionale — richiede PowerShell come Amministratore)*
 
 A differenza di VirtualBox, **VMware Workstation 16 è compatibile con Hyper-V** su Windows 10/11 (versione 2004 o successive) grazie al supporto per Windows Hypervisor Platform (WHP). Tuttavia, per prestazioni ottimali è consigliato disabilitarlo se non necessario:
 
@@ -511,7 +515,9 @@ View → Autofit Guest
 
 ---
 
-## Parte 5: Creazione VM Windows
+## Parte 5: Creazione VM Windows 🔲 *(opzionale)*
+
+> 💡 **Questa parte è opzionale.** Richiede una ISO di Windows (file di grandi dimensioni) e hardware più potente (almeno 4 GB di RAM dedicati alla VM). Se le risorse lo consentono, è un ottimo esercizio per confrontare il comportamento di VMware con guest Windows. In caso contrario, puoi passare direttamente alla Parte 6.
 
 ### 5.1 Download ISO Windows
 
@@ -861,7 +867,9 @@ Use case: server, test rete reale, ambienti che richiedono IP dedicato
 Use case: test sicuri, ambienti isolati, lab di sicurezza
 ```
 
-### 7.2 Virtual Network Editor (solo Pro)
+### 7.2 Virtual Network Editor (solo Pro) ⚙️ *(richiede privilegi di amministratore)*
+
+> ⚠️ **Nota:** Il Virtual Network Editor richiede i **diritti di amministratore** per essere avviato. Su Windows, avviarlo tramite tasto destro → "Esegui come amministratore". In ambienti senza tali privilegi, questa sezione è da leggere/studiare senza esecuzione pratica.
 
 VMware Workstation Pro include un editor di reti virtuali avanzato:
 
@@ -886,7 +894,9 @@ Assegnare la rete a una VM:
 VM → Settings → Network Adapter → Custom: VMnet2
 ```
 
-### 7.3 Port Forwarding con NAT
+### 7.3 Port Forwarding con NAT ⚙️ *(richiede privilegi di amministratore)*
+
+> ⚠️ **Nota:** La configurazione del port forwarding avviene tramite il Virtual Network Editor, che richiede i **diritti di amministratore**. Senza tali privilegi, saltare questa sezione.
 
 Per accedere a servizi nella VM dall'host:
 
