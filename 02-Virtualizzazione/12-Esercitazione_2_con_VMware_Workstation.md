@@ -14,6 +14,29 @@ In questa esercitazione pratica imparerai a:
 
 ---
 
+## 📋 Modalità di Consegna
+
+Per questa esercitazione dovrai produrre un **documento Google** contenente:
+
+1. **Copertina:** Nome, Cognome, Classe, Data
+2. **Indice** numerato con tutte le sezioni
+3. **Screenshot numerati** (📸) con annotazioni (frecce, cerchi, didascalie) — segui i marcatori nel testo
+4. **Risposte** alle domande di riflessione (❓) con spiegazioni complete
+5. **Conclusioni personali** (almeno 10 righe) sull'esperienza con VMware Workstation 16
+
+**Requisiti screenshot:**
+- Risoluzione minima: 1280×720 pixel
+- Evidenzia gli elementi importanti con frecce o cerchi
+- Aggiungi una breve didascalia descrittiva sotto ogni screenshot
+
+**Consegna:**
+- Esporta il documento in **PDF**
+- Nome file: `VMware_Lab_[CognomeNome]_[Classe]_[Data].pdf`
+- Carica su Google Drive e condividi il link (permesso: "chiunque con il link può visualizzare")
+- Invia il link al docente entro la scadenza indicata
+
+---
+
 ## Parte 1: Preparazione dell'Ambiente
 
 ### 1.1 Requisiti di Sistema
@@ -87,6 +110,18 @@ vmware --version
 # Output atteso: VMware Workstation 16.x.x build-xxxxxxx
 ```
 
+📸 **SCREENSHOT 1:** Schermata principale di VMware Workstation 16 dopo l'installazione (homepage con le opzioni "Create a New Virtual Machine", "Open a Virtual Machine", ecc.).
+
+📸 **SCREENSHOT 2:** Finestra di installazione di VMware Workstation 16 (wizard di setup con barra di avanzamento oppure schermata finale di completamento con pulsante "Finish").
+
+❓ **Domande di Riflessione 1**
+
+**R1.1** Qual è la differenza tra un hypervisor di tipo 1 (bare-metal) e uno di tipo 2 (hosted)? In quale categoria rientra VMware Workstation 16?
+
+**R1.2** In quali scenari è giustificato acquistare VMware Workstation **Pro** rispetto al Player gratuito? Elenca almeno tre funzionalità esclusive della versione Pro.
+
+**R1.3** Perché VMware Workstation non è disponibile per macOS? Quale prodotto VMware copre questa esigenza su macOS?
+
 ---
 
 ## Parte 2: Abilitazione Virtualizzazione nel BIOS
@@ -158,6 +193,16 @@ bcdedit /set hypervisorlaunchtype auto
 ```
 
 > 💡 **Nota:** Se usi WSL2 o Windows Sandbox, potresti aver bisogno di Hyper-V. In quel caso lascialo attivo; VMware 16 funzionerà comunque, ma con performance leggermente ridotte.
+
+📸 **SCREENSHOT 3:** Schermata BIOS/UEFI con la voce di virtualizzazione (Intel VT-x, AMD-V o SVM) impostata su "Enabled". In alternativa, screenshot del Task Manager (tab Prestazioni → CPU) che mostra "Virtualizzazione: Abilitata".
+
+❓ **Domande di Riflessione 2**
+
+**R2.1** Cosa succede se si prova a creare una VM a 64-bit su un host con virtualizzazione hardware disabilitata nel BIOS? Quale messaggio di errore mostrerà VMware?
+
+**R2.2** Qual è la differenza tecnica tra Intel VT-x e AMD-V? Sono compatibili tra loro o riguardano architetture CPU diverse?
+
+**R2.3** Perché VMware Workstation 16 può coesistere con Hyper-V (tramite Windows Hypervisor Platform), mentre le versioni precedenti non potevano? Cosa cambia a livello architetturale?
 
 ---
 
@@ -330,6 +375,18 @@ sudo apt update
 sudo apt upgrade -y
 ```
 
+📸 **SCREENSHOT 4:** Wizard di creazione della nuova VM — step Easy Install con nome utente e password inseriti e il rilevamento automatico di "Ubuntu 64-bit" da parte di VMware.
+
+📸 **SCREENSHOT 5:** VM Ubuntu avviata con successo — desktop Ubuntu visibile nella finestra VMware Workstation (primo avvio dopo Easy Install o installazione manuale).
+
+❓ **Domande di Riflessione 3**
+
+**R3.1** Quali vantaggi offre la funzione Easy Install di VMware rispetto a un'installazione manuale? In quale scenario preferiresti eseguire un'installazione manuale?
+
+**R3.2** Qual è la differenza tra memorizzare il disco virtuale in un singolo file e dividerlo in più file da 2 GB? Quando è preferibile l'uno rispetto all'altro?
+
+**R3.3** Perché si raccomanda di non assegnare alla VM più vCPU della metà dei core fisici disponibili sull'host? Quali problemi di performance potrebbe causare un overcommit?
+
 ---
 
 ## Parte 4: Installazione VMware Tools
@@ -436,6 +493,22 @@ View → Autofit Guest
 → La finestra si ridimensionerà e il guest si adatterà
 ```
 
+📸 **SCREENSHOT 6:** Output del comando `vmware-toolsd --version` nel terminale di Ubuntu (mostra la versione installata di VMware Tools o open-vm-tools).
+
+📸 **SCREENSHOT 7:** Dimostrazione della clipboard condivisa funzionante — testo copiato dall'host e incollato nel guest Ubuntu (o viceversa).
+
+📸 **SCREENSHOT 8:** Finestra VM → Settings → Options → Shared Folders con almeno una cartella condivisa configurata e abilitata.
+
+📸 **SCREENSHOT 9:** Terminale Ubuntu con output del comando `ls /mnt/hgfs/` che mostra la cartella condivisa montata e accessibile.
+
+❓ **Domande di Riflessione 4**
+
+**R4.1** Qual è la differenza tra `open-vm-tools` (installato via apt) e i VMware Tools ufficiali (installati da CD virtuale VMware)? Quali sono i vantaggi di usare `open-vm-tools` su Ubuntu?
+
+**R4.2** Elenca almeno cinque funzionalità della VM che non sarebbero disponibili senza VMware Tools installati.
+
+**R4.3** Come funziona tecnicamente la clipboard condivisa tra host e guest? Il meccanismo potrebbe presentare rischi di sicurezza? In quale scenario è consigliabile disabilitarla?
+
 ---
 
 ## Parte 5: Creazione VM Windows
@@ -516,6 +589,20 @@ Con Easy Install, VMware Tools viene installato **automaticamente**. Se necessar
 - Testa copia/incolla tra host e guest
 - Testa drag & drop di file
 ```
+
+📸 **SCREENSHOT 10:** Desktop di Windows (10 o 11) in esecuzione nella VM VMware — schermata iniziale o desktop con taskbar visibile.
+
+📸 **SCREENSHOT 11:** Pannello di controllo Windows → Programmi con VMware Tools nell'elenco (oppure: Gestione Dispositivi con i dispositivi VMware visibili).
+
+📸 **SCREENSHOT 12:** Unity Mode attivo — finestre di applicazioni Windows visibili direttamente nel desktop dell'host, con il taskbar VMware nell'angolo.
+
+❓ **Domande di Riflessione 5**
+
+**R5.1** Perché Windows 11 richiede TPM 2.0 e Secure Boot? Quali minacce di sicurezza mitigano questi requisiti hardware?
+
+**R5.2** Come VMware Workstation 16 emula un chip TPM 2.0 virtuale (vTPM) senza che l'host abbia necessariamente un chip TPM fisico? Perché è necessario cifrare la VM prima di aggiungere il vTPM?
+
+**R5.3** Unity Mode è una funzionalità esclusiva di VMware. Quale funzionalità analoga offre VirtualBox (Seamless Mode)? Descrivi le differenze pratiche.
 
 ---
 
@@ -724,6 +811,20 @@ sudo resize2fs /dev/sda1     # ridimensiona il filesystem
 df -h                         # verifica il nuovo spazio
 ```
 
+📸 **SCREENSHOT 13:** Snapshot Manager (VM → Snapshot → Snapshot Manager) con almeno 2-3 snapshot visibili nell'albero gerarchico.
+
+📸 **SCREENSHOT 14:** Procedura di clone completata — la VM clonata visibile nell'elenco delle VM in VMware Workstation, con il tipo di clone indicato.
+
+📸 **SCREENSHOT 15:** Cartella o file manager dell'host con il file `.ova` (o la cartella `.ovf`) dell'esportazione completata, con nome file e dimensione visibili.
+
+❓ **Domande di Riflessione 6**
+
+**R6.1** Qual è la differenza tra un **linked clone** e un **full clone**? In quale scenario useresti ciascuno? Quali sono i rischi pratici del linked clone?
+
+**R6.2** Perché è importante consolidare o eliminare snapshot vecchi regolarmente? Come impattano negativamente sulle performance delle operazioni su disco?
+
+**R6.3** Il formato OVF/OVA garantisce sempre la compatibilità tra hypervisor diversi (es. VMware → VirtualBox)? Quali problemi concreti potrebbero emergere durante l'importazione?
+
 ---
 
 ## Parte 7: Networking
@@ -813,6 +914,20 @@ ip addr show ens33
 # o
 hostname -I
 ```
+
+📸 **SCREENSHOT 16:** Virtual Network Editor (Edit → Virtual Network Editor) con le reti virtuali configurate (VMnet0, VMnet1, VMnet8) e i relativi tipi e subnet.
+
+📸 **SCREENSHOT 17:** Finestra NAT Settings → Port Forwarding con almeno una regola configurata (es. porta 2222 → porta 22 della VM).
+
+📸 **SCREENSHOT 18:** Terminale dell'host con connessione SSH riuscita alla VM tramite port forwarding (comando `ssh -p 2222 student@localhost` con prompt del guest Ubuntu visibile).
+
+❓ **Domande di Riflessione 7**
+
+**R7.1** Hai una VM con un server web che deve essere raggiungibile da altri computer nella rete locale. Quale modalità di rete useresti e perché? Descrivi pro e contro.
+
+**R7.2** Qual è la differenza pratica tra NAT e Bridged in termini di indirizzo IP assegnato alla VM? Con quale modalità la VM risulta "visibile" sulla rete come se fosse un dispositivo fisico?
+
+**R7.3** Descrivi uno scenario reale di laboratorio di sicurezza informatica in cui la rete Host-Only è preferibile alle altre modalità. Perché l'isolamento è fondamentale in quel contesto?
 
 ---
 
@@ -1128,3 +1243,103 @@ Prima di completare l'esercitazione, verifica di aver:
 - [ ] Risolto almeno un problema comune
 
 **Congratulazioni! Hai completato l'esercitazione sulla virtualizzazione con VMware Workstation 16!** 🎉
+
+---
+
+## Parte 12: Documentazione Finale e Consegna
+
+### 12.1 Template Documento Google
+
+Struttura il tuo documento come segue:
+
+```
+1. COPERTINA
+   - Titolo: "Esercitazione 2 - Virtualizzazione con VMware Workstation 16"
+   - Nome e Cognome: _______________
+   - Classe: _______________
+   - Data: _______________
+
+2. INDICE
+   - Elenco numerato di tutte le sezioni con numero di pagina
+
+3. INTRODUZIONE (5-10 righe)
+   - Breve descrizione degli obiettivi dell'esercitazione
+   - Configurazione dell'ambiente usato (specifiche del PC host)
+
+4. PARTI 1-11
+   Per ogni parte includi:
+   - Screenshot numerati (📸) con annotazioni e didascalia
+   - Risposte complete alle domande di riflessione (❓)
+
+5. CONCLUSIONI (minimo 10 righe)
+   - Cosa hai imparato
+   - Differenze rispetto a VirtualBox (se già usato in precedenza)
+   - Difficoltà incontrate e come le hai risolte
+   - Possibili usi pratici di VMware Workstation 16
+```
+
+### 12.2 Checklist di Controllo
+
+Prima di consegnare, verifica di aver incluso tutti gli elementi richiesti:
+
+**Screenshot richiesti:**
+- [ ] 📸 SCREENSHOT 1: Schermata principale di VMware Workstation 16 installato
+- [ ] 📸 SCREENSHOT 2: Wizard di installazione VMware (in corso o completato)
+- [ ] 📸 SCREENSHOT 3: BIOS/UEFI con virtualizzazione abilitata (o Task Manager)
+- [ ] 📸 SCREENSHOT 4: Wizard Easy Install con rilevamento Ubuntu automatico
+- [ ] 📸 SCREENSHOT 5: VM Ubuntu avviata (desktop Ubuntu visibile)
+- [ ] 📸 SCREENSHOT 6: Output `vmware-toolsd --version` nel terminale
+- [ ] 📸 SCREENSHOT 7: Clipboard condivisa funzionante (copia/incolla host ↔ guest)
+- [ ] 📸 SCREENSHOT 8: VM Settings → Shared Folders con cartella configurata
+- [ ] 📸 SCREENSHOT 9: Output `ls /mnt/hgfs/` con cartella condivisa visibile
+- [ ] 📸 SCREENSHOT 10: Desktop Windows in esecuzione nella VM
+- [ ] 📸 SCREENSHOT 11: VMware Tools installati su Windows (Pannello di Controllo)
+- [ ] 📸 SCREENSHOT 12: Unity Mode attivo (finestre Windows nel desktop host)
+- [ ] 📸 SCREENSHOT 13: Snapshot Manager con albero degli snapshot (almeno 2-3)
+- [ ] 📸 SCREENSHOT 14: VM clonata visibile nell'elenco VMware Workstation
+- [ ] 📸 SCREENSHOT 15: File OVA/OVF esportato (con nome e dimensione visibili)
+- [ ] 📸 SCREENSHOT 16: Virtual Network Editor con reti VMnet configurate
+- [ ] 📸 SCREENSHOT 17: Port forwarding configurato (NAT Settings)
+- [ ] 📸 SCREENSHOT 18: Connessione SSH tramite port forwarding riuscita
+
+**Domande di riflessione:**
+- [ ] ❓ Domande 1 (R1.1, R1.2, R1.3) — Preparazione Ambiente
+- [ ] ❓ Domande 2 (R2.1, R2.2, R2.3) — Virtualizzazione BIOS
+- [ ] ❓ Domande 3 (R3.1, R3.2, R3.3) — Creazione VM Linux
+- [ ] ❓ Domande 4 (R4.1, R4.2, R4.3) — VMware Tools
+- [ ] ❓ Domande 5 (R5.1, R5.2, R5.3) — VM Windows
+- [ ] ❓ Domande 6 (R6.1, R6.2, R6.3) — Gestione Quotidiana
+- [ ] ❓ Domande 7 (R7.1, R7.2, R7.3) — Networking
+
+**Altre verifiche:**
+- [ ] Almeno un Esercizio Pratico (Parte 11) completato con documentazione
+- [ ] Conclusioni personali (minimo 10 righe)
+- [ ] Tutti gli screenshot hanno una didascalia descrittiva
+- [ ] Il documento è esportato come PDF
+
+### 12.3 Criteri di Valutazione
+
+| Criterio | Descrizione | Peso |
+|---|---|---|
+| **Completezza** | Tutti gli screenshot e le domande sono presenti | 25% |
+| **Correttezza** | Le risposte sono tecnicamente accurate | 25% |
+| **Approfondimento** | Le risposte mostrano comprensione profonda, non solo definizioni | 20% |
+| **Chiarezza** | Screenshot ben annotati, testo chiaro e ben organizzato | 15% |
+| **Sperimentazione** | Esercizi pratici completati con documentazione | 10% |
+| **Riflessione critica** | Confronto con VirtualBox, considerazioni personali motivate | 5% |
+
+### 12.4 Consegna
+
+```
+1. Apri il documento su Google Docs
+2. File → Scarica → Documento PDF (.pdf)
+3. Rinomina il file: VMware_Lab_[CognomeNome]_[Classe]_[Data].pdf
+   Esempio: VMware_Lab_RossiMario_3A_2024-03-15.pdf
+4. Carica il PDF su Google Drive (nella cartella della classe)
+5. Tasto destro sul file → Condividi → "Chiunque con il link può visualizzare"
+6. Copia il link e invialo al docente tramite il canale indicato
+   (email / Google Classroom / registro elettronico)
+```
+
+> ⚠️ **Importante:** Invia il link al **file PDF** su Google Drive, non il link al documento Google Docs.
+> La condivisione deve essere impostata **prima** di inviare il link.
